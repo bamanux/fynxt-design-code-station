@@ -214,7 +214,7 @@ function WorkspaceBody({ config }: { config: ActivityWorkspaceConfig }) {
             selectable
             align="start"
             items={config.statuses.map((s) => ({ id: s.value, label: s.label, selected: s.value === r.status, onSelect: () => void run(() => api.setStatus(r.id, s.value)) }))}
-            renderTrigger={(p) => <FilterChip {...p} label={labels.status} value={statusLabel(r.status)} />}
+            renderTrigger={(p) => <FilterChip {...p} label={statusLabel(r.status)} aria-label={`${labels.status}: ${statusLabel(r.status)}`} />}
           />
         ) : (
           <Badge status="info">{statusLabel(r.status)}</Badge>
@@ -229,7 +229,10 @@ function WorkspaceBody({ config }: { config: ActivityWorkspaceConfig }) {
             selectable
             align="start"
             items={config.reminders.map((o) => ({ id: o.value, label: o.label, selected: o.value === r.reminder, onSelect: () => void run(() => api.setReminder(r.id, o.value)) }))}
-            renderTrigger={(p) => <FilterChip {...p} label={labels.reminder} value={config.reminders.find((o) => o.value === r.reminder)?.label ?? labels.noReminder} />}
+            renderTrigger={(p) => {
+              const current = config.reminders.find((o) => o.value === r.reminder)?.label ?? labels.noReminder;
+              return <FilterChip {...p} label={current} aria-label={`${labels.reminder}: ${current}`} />;
+            }}
           />
         ) : (
           <span>{config.reminders.find((o) => o.value === r.reminder)?.label ?? labels.noReminder}</span>

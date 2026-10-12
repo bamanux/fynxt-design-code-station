@@ -5,8 +5,9 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  flex: none;
   inline-size: calc(var(--fx-spacing-12) * 5.5);
-  block-size: 100%;
+  align-self: stretch;
   border-inline-end: var(--fx-border-width-thin) solid var(--fx-border-default);
   background: var(--fx-surface-card);
 }

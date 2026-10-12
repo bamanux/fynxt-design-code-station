@@ -247,7 +247,7 @@ export const tasksConfig: ActivityWorkspaceConfig = {
       { name: "description", label: "Description", type: "textarea", placeholder: "Describe the follow-up" },
     ],
   },
-  formatDateTime: (v) => dateFmt.format(new Date(v)),
+  formatDateTime: (v) => dateFmt.format(new Date(v)).replace(/\b(am|pm)\b/, (m) => m.toUpperCase()),
   // DEMO ONLY: the permission model is undefined (Q5). Production must supply real rules.
   permissionCheck: () => true,
   dataAdapter: createMemoryAdapter({
