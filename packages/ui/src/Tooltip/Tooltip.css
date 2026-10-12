@@ -1,0 +1,22 @@
+/* Spec: FDS-101 Tooltip (66:39): neutral/900 bubble, radius/md, padding 6/10, Label/XS neutral/0. */
+.fx-tooltip { position: relative; display: inline-flex; }
+.fx-tooltip__bubble {
+  position: absolute;
+  inset-inline-start: 50%;
+  z-index: 20;
+  translate: -50% 0;
+  inline-size: max-content;
+  max-inline-size: calc(var(--fx-spacing-12) * 5);
+  padding: calc(var(--fx-spacing-1) * 1.5) calc(var(--fx-spacing-1) * 2.5);
+  border-radius: var(--fx-radius-md);
+  background: var(--fx-color-neutral-900);
+  color: var(--fx-color-neutral-0);
+  font-family: var(--fx-typography-label-xs-font-family);
+  font-weight: var(--fx-typography-label-xs-font-weight);
+  font-size: var(--fx-typography-label-xs-font-size);
+  line-height: var(--fx-typography-label-xs-line-height);
+  pointer-events: none;
+}
+.fx-tooltip__bubble[hidden] { display: none; }
+.fx-tooltip__bubble--top { inset-block-end: calc(100% + var(--fx-spacing-2)); }
+.fx-tooltip__bubble--bottom { inset-block-start: calc(100% + var(--fx-spacing-2)); }

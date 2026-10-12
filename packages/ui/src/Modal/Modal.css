@@ -1,0 +1,96 @@
+/* Spec: FDS-101 Form Modal (358:352): widths 400/560/720, header title + window actions, body slot,
+   footer actions; elevation XL over overlay. Modal Type=Delete (388:2275): icon circle + title + message. */
+.fx-modal__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: var(--fx-spacing-6);
+  background: rgb(15 23 42 / 0.4); /* OBSERVED: no token — DCF-0001 Q38, no published overlay/scrim variable */
+}
+.fx-modal {
+  display: flex;
+  flex-direction: column;
+  inline-size: 100%;
+  max-block-size: calc(100vh - var(--fx-spacing-12));
+  border-radius: var(--fx-radius-lg);
+  background: var(--fx-surface-card);
+  box-shadow: var(--fx-shadow-xl);
+  color: var(--fx-text-foreground);
+}
+.fx-modal--small { max-inline-size: calc(var(--fx-spacing-10) * 10); }
+.fx-modal--medium { max-inline-size: calc(var(--fx-spacing-10) * 14); }
+.fx-modal--large { max-inline-size: calc(var(--fx-spacing-10) * 18); }
+.fx-modal--maximized { max-inline-size: none; block-size: calc(100vh - var(--fx-spacing-12)); }
+.fx-modal--confirm { max-inline-size: calc(var(--fx-spacing-10) * 10.5); padding: var(--fx-spacing-6); gap: var(--fx-spacing-5); }
+.fx-modal--minimized {
+  position: fixed;
+  inset-block-end: var(--fx-spacing-4);
+  inset-inline-end: var(--fx-spacing-4);
+  z-index: 50;
+  max-inline-size: calc(var(--fx-spacing-10) * 9);
+}
+.fx-modal__header {
+  display: flex;
+  align-items: center;
+  gap: var(--fx-spacing-3);
+  padding: var(--fx-spacing-4) var(--fx-spacing-6);
+  border-block-end: var(--fx-border-width-thin) solid var(--fx-border-default);
+}
+.fx-modal--minimized .fx-modal__header { border-block-end: 0; }
+.fx-modal__title {
+  flex: 1;
+  margin: 0;
+  font-family: var(--fx-typography-heading-lg-font-family);
+  font-weight: var(--fx-typography-heading-lg-font-weight);
+  font-size: var(--fx-typography-heading-lg-font-size);
+  line-height: var(--fx-typography-heading-lg-line-height);
+}
+.fx-modal--confirm .fx-modal__title { font-size: var(--fx-typography-heading-base-font-size); line-height: var(--fx-typography-heading-base-line-height); }
+.fx-modal__window { display: inline-flex; gap: var(--fx-spacing-2); }
+.fx-modal__win-btn {
+  display: inline-flex;
+  padding: var(--fx-spacing-1);
+  border: 0;
+  border-radius: var(--fx-radius-sm);
+  background: none;
+  color: var(--fx-icon-color);
+  cursor: pointer;
+}
+.fx-modal__win-btn > svg { inline-size: var(--fx-spacing-4); block-size: var(--fx-spacing-4); }
+.fx-modal__win-btn:hover { background: var(--fx-color-neutral-50); }
+.fx-modal__win-btn:focus-visible { outline: var(--fx-border-width-thick) solid var(--fx-border-focus); }
+.fx-modal__body { display: flex; flex-direction: column; gap: var(--fx-spacing-4); padding: var(--fx-spacing-5) var(--fx-spacing-6); overflow-y: auto; }
+.fx-modal__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--fx-spacing-2);
+  padding: var(--fx-spacing-4) var(--fx-spacing-6);
+  border-block-start: var(--fx-border-width-thin) solid var(--fx-border-default);
+}
+.fx-modal--confirm .fx-modal__footer { padding: 0; border: 0; }
+.fx-modal__confirm-content { display: flex; gap: var(--fx-spacing-4); }
+.fx-modal__confirm-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  inline-size: var(--fx-spacing-10);
+  block-size: var(--fx-spacing-10);
+  border-radius: var(--fx-radius-full);
+  background: var(--fx-feedback-error-bg);
+  color: var(--fx-status-destructive);
+}
+.fx-modal__confirm-icon > svg { inline-size: var(--fx-spacing-4); block-size: var(--fx-spacing-4); }
+.fx-modal__message {
+  margin-block-start: var(--fx-spacing-1);
+  color: var(--fx-text-muted-foreground);
+  font-family: var(--fx-typography-body-sm-font-family);
+  font-size: var(--fx-typography-body-sm-font-size);
+  line-height: var(--fx-typography-body-sm-line-height);
+}
+@media (max-width: 640px) { /* OBSERVED: no token — DCF-0001, no breakpoint tokens (D11) */
+  .fx-modal__overlay { padding: 0; align-items: end; }
+  .fx-modal { max-inline-size: none; border-end-start-radius: 0; border-end-end-radius: 0; }
+}

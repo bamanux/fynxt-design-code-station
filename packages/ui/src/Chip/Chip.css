@@ -1,0 +1,31 @@
+/* Spec: FDS-101 Chip / Selection (93:212) Type=Input: padding 4/8, gap 6, radius 6, surface/card,
+   border/default, Label/XS brand/secondary-foreground, icons 16 icon/color. */
+.fx-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--fx-spacing-1) * 1.5);
+  max-inline-size: 100%;
+  padding: var(--fx-spacing-1) var(--fx-spacing-2);
+  border: var(--fx-border-width-thin) solid var(--fx-border-default);
+  border-radius: var(--fx-radius-md);
+  background: var(--fx-surface-card);
+  color: var(--fx-brand-secondary-foreground);
+  font-family: var(--fx-typography-label-xs-font-family);
+  font-weight: var(--fx-typography-label-xs-font-weight);
+  font-size: var(--fx-typography-label-xs-font-size);
+  line-height: var(--fx-typography-label-xs-line-height);
+}
+.fx-chip[data-disabled] { opacity: var(--fx-opacity-disabled); }
+.fx-chip__leading { display: inline-flex; }
+.fx-chip__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fx-chip__remove {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  border-radius: var(--fx-radius-sm);
+  background: none;
+  color: var(--fx-icon-color);
+  cursor: pointer;
+}
+.fx-chip__remove > svg { inline-size: var(--fx-spacing-4); block-size: var(--fx-spacing-4); }
+.fx-chip__remove:focus-visible { outline: var(--fx-border-width-thick) solid var(--fx-border-focus); }

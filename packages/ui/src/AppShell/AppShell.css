@@ -1,0 +1,28 @@
+/* Spec: DCF-0001 candidate App Shell (work file 22:3867): Side Nav | (Top Nav 48 + Body padding
+   spacing/5) on surface/background. Top Nav = FDS-101 141:117 (title Heading/LG, actions gap 8). */
+.fx-appshell {
+  display: flex;
+  min-block-size: 100%;
+  background: var(--fx-surface-background);
+  color: var(--fx-text-foreground);
+}
+.fx-appshell__main { display: flex; flex: 1; flex-direction: column; min-inline-size: 0; }
+.fx-appshell__content { flex: 1; min-inline-size: 0; padding: var(--fx-spacing-5); }
+.fx-topnav {
+  display: flex;
+  align-items: center;
+  gap: var(--fx-spacing-4);
+  block-size: var(--fx-spacing-12);
+  padding-inline: var(--fx-spacing-6);
+  border-block-end: var(--fx-border-width-thin) solid var(--fx-border-default);
+  background: var(--fx-surface-card);
+}
+.fx-topnav__title {
+  flex: 1;
+  margin: 0;
+  font-family: var(--fx-typography-heading-lg-font-family);
+  font-weight: var(--fx-typography-heading-lg-font-weight);
+  font-size: var(--fx-typography-heading-lg-font-size);
+  line-height: var(--fx-typography-heading-lg-line-height);
+}
+.fx-topnav__actions { display: flex; align-items: center; gap: var(--fx-spacing-2); }

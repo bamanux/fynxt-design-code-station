@@ -1,0 +1,51 @@
+/* Spec: FDS-101 Empty State (343:83): padding spacing/5xl × spacing/3xl, gap spacing/sm, radius/lg,
+   surface/card + border/default; icon circle 56 surface/background; Heading/Base; Body/SM muted. */
+.fx-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--fx-spacing-sm);
+  max-inline-size: calc(var(--fx-spacing-12) * 10);
+  margin-inline: auto;
+  padding: var(--fx-spacing-5xl) var(--fx-spacing-3xl);
+  border: var(--fx-border-width-thin) solid var(--fx-border-default);
+  border-radius: var(--fx-radius-lg);
+  background: var(--fx-surface-card);
+  text-align: center;
+}
+.fx-empty--compact { padding: var(--fx-spacing-lg); border: 0; background: transparent; }
+.fx-empty__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: calc(var(--fx-spacing-7) * 2);
+  block-size: calc(var(--fx-spacing-7) * 2);
+  margin-block-end: var(--fx-spacing-1);
+  border-radius: var(--fx-radius-full);
+  background: var(--fx-surface-background);
+  color: var(--fx-icon-color);
+}
+.fx-empty__icon > svg { inline-size: var(--fx-spacing-6); block-size: var(--fx-spacing-6); }
+.fx-empty__title {
+  margin: 0;
+  color: var(--fx-text-foreground);
+  font-family: var(--fx-typography-heading-base-font-family);
+  font-weight: var(--fx-typography-heading-base-font-weight);
+  font-size: var(--fx-typography-heading-base-font-size);
+  line-height: var(--fx-typography-heading-base-line-height);
+}
+.fx-empty--compact .fx-empty__title {
+  color: var(--fx-text-muted-foreground);
+  font-family: var(--fx-typography-body-sm-font-family);
+  font-weight: var(--fx-typography-body-sm-font-weight);
+  font-size: var(--fx-typography-body-sm-font-size);
+  line-height: var(--fx-typography-body-sm-line-height);
+}
+.fx-empty__description {
+  margin: 0;
+  color: var(--fx-text-muted-foreground);
+  font-family: var(--fx-typography-body-sm-font-family);
+  font-size: var(--fx-typography-body-sm-font-size);
+  line-height: var(--fx-typography-body-sm-line-height);
+}
+.fx-empty__action { margin-block-start: var(--fx-spacing-2); }

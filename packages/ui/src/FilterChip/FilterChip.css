@@ -1,0 +1,22 @@
+/* Spec: FDS-101 Filter chip (432:22480): height 32, padding spacing/md · spacing/sm, radius/default,
+   border-width/thin. Active: surface/selected + brand/primary border and text. Label/XS. */
+.fx-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  block-size: var(--fx-spacing-8);
+  padding-inline: var(--fx-spacing-md) var(--fx-spacing-sm);
+  border: var(--fx-border-width-thin) solid var(--fx-border-default);
+  border-radius: var(--fx-radius-default);
+  background: var(--fx-surface-card);
+  color: var(--fx-text-foreground);
+  font-family: var(--fx-typography-label-xs-font-family);
+  font-weight: var(--fx-typography-label-xs-font-weight);
+  font-size: var(--fx-typography-label-xs-font-size);
+  line-height: var(--fx-typography-label-xs-line-height);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.fx-filter-chip:hover { border-color: var(--fx-border-strong); }
+.fx-filter-chip:focus-visible { outline: var(--fx-border-width-thick) solid var(--fx-border-focus); }
+.fx-filter-chip--active { border-color: var(--fx-brand-primary); background: var(--fx-surface-selected); color: var(--fx-brand-primary); }
+.fx-filter-chip__chevron { inline-size: var(--fx-spacing-4); block-size: var(--fx-spacing-4); margin-inline-start: calc(var(--fx-spacing-1) * 1.5); }

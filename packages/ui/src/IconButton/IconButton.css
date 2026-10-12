@@ -1,0 +1,60 @@
+/* Spec: FDS-101 Icon Button (106:1149). Secondary/MD read 2026-10-12: 36×36, radius/default,
+   surface/card + border/default, icon 16 icon/color, badge dot 8 status/error. */
+.fx-icon-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  padding: 0;
+  border: var(--fx-border-width-thin) solid transparent;
+  border-radius: var(--fx-radius-default);
+  color: var(--fx-icon-color);
+  background: transparent;
+  cursor: pointer;
+  transition: background-color var(--fx-duration-fast) var(--fx-easing-standard),
+    border-color var(--fx-duration-fast) var(--fx-easing-standard);
+}
+.fx-icon-btn:focus-visible { outline: var(--fx-border-width-thick) solid var(--fx-border-focus); outline-offset: 0; }
+.fx-icon-btn:disabled { opacity: var(--fx-opacity-disabled); cursor: not-allowed; }
+.fx-icon-btn__icon { display: inline-flex; inline-size: var(--fx-spacing-4); block-size: var(--fx-spacing-4); }
+.fx-icon-btn__icon > svg { inline-size: 100%; block-size: 100%; }
+
+.fx-icon-btn--sm { inline-size: var(--fx-spacing-8); block-size: var(--fx-spacing-8); }
+.fx-icon-btn--md { inline-size: calc(var(--fx-spacing-9)); block-size: calc(var(--fx-spacing-9)); }
+.fx-icon-btn--lg { inline-size: var(--fx-spacing-10); block-size: var(--fx-spacing-10); }
+
+.fx-icon-btn--primary { background: var(--fx-brand-primary); color: var(--fx-text-on-primary); }
+.fx-icon-btn--primary:hover:not(:disabled) { background: var(--fx-color-navy-600); }
+.fx-icon-btn--secondary { background: var(--fx-surface-card); border-color: var(--fx-border-default); }
+.fx-icon-btn--secondary:hover:not(:disabled) { background: var(--fx-color-neutral-50); border-color: var(--fx-border-strong); }
+.fx-icon-btn--outline { border-color: var(--fx-border-default); }
+.fx-icon-btn--outline:hover:not(:disabled),
+.fx-icon-btn--ghost:hover:not(:disabled) { background: var(--fx-color-neutral-50); }
+.fx-icon-btn--destructive { background: var(--fx-status-destructive); color: var(--fx-text-on-primary); }
+
+.fx-icon-btn__dot {
+  position: absolute;
+  inset-block-start: var(--fx-spacing-1);
+  inset-inline-end: var(--fx-spacing-1);
+  inline-size: var(--fx-spacing-2);
+  block-size: var(--fx-spacing-2);
+  border-radius: var(--fx-radius-full);
+  background: var(--fx-status-error);
+  box-shadow: 0 0 0 1px var(--fx-surface-card);
+}
+.fx-icon-btn__count {
+  position: absolute;
+  inset-block-start: calc(var(--fx-spacing-2) * -1);
+  inset-inline-end: calc(var(--fx-spacing-2) * -1);
+  min-inline-size: var(--fx-spacing-4);
+  padding-inline: var(--fx-spacing-1);
+  border-radius: var(--fx-radius-full);
+  background: var(--fx-brand-primary);
+  color: var(--fx-text-on-primary);
+  font-family: var(--fx-typography-label-xxs-font-family);
+  font-weight: var(--fx-typography-label-xxs-font-weight);
+  font-size: var(--fx-typography-label-xxs-font-size);
+  line-height: var(--fx-spacing-4);
+  text-align: center;
+}

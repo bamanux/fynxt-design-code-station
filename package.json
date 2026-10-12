@@ -4,14 +4,19 @@
   "private": true,
   "description": "FYNXT Design Code Station: shared tokens, component library, templates and FDI Studio. Governed by fynxt-product-experience-engine.",
   "type": "module",
-  "workspaces": ["packages/*", "apps/*"],
-  "engines": { "node": ">=20.12" },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20.12"
+  },
   "scripts": {
     "dev": "npm run tokens:build && npm run dev -w @fynxt/studio",
     "build": "npm run tokens:build && npm run build -w @fynxt/studio",
     "start": "npm run start -w @fynxt/studio",
     "tokens:build": "node scripts/sync-tokens.mjs",
-    "typecheck": "tsc -p packages/ui && tsc -p apps/studio && tsc -p apps/studio/tsconfig.server.json",
+    "typecheck": "tsc -p packages/ui && tsc -p packages/templates && tsc -p apps/studio && tsc -p apps/studio/tsconfig.server.json",
     "test": "vitest run",
     "lint": "node scripts/check-token-literals.mjs"
   },

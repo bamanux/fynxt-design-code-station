@@ -1,0 +1,29 @@
+/* Spec: FDS-101 Avatar (73:12): brand/primary circle, initials Table/Header neutral/0, online dot status/success. */
+.fx-avatar {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border-radius: var(--fx-radius-full);
+  background: var(--fx-brand-primary);
+  color: var(--fx-color-neutral-0);
+  font-family: var(--fx-typography-table-header-font-family);
+  font-weight: var(--fx-typography-table-header-font-weight);
+  font-size: var(--fx-typography-table-header-font-size);
+  line-height: 1;
+}
+.fx-avatar--24 { inline-size: var(--fx-spacing-6); block-size: var(--fx-spacing-6); font-size: var(--fx-typography-label-xxs-font-size); }
+.fx-avatar--32 { inline-size: var(--fx-spacing-8); block-size: var(--fx-spacing-8); }
+.fx-avatar--40 { inline-size: var(--fx-spacing-10); block-size: var(--fx-spacing-10); }
+.fx-avatar__img { inline-size: 100%; block-size: 100%; border-radius: inherit; object-fit: cover; }
+.fx-avatar__online {
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline-end: 0;
+  inline-size: calc(var(--fx-spacing-1) * 2.5);
+  block-size: calc(var(--fx-spacing-1) * 2.5);
+  border-radius: var(--fx-radius-full);
+  background: var(--fx-status-success);
+  box-shadow: 0 0 0 2px var(--fx-surface-card); /* OBSERVED: no token — DCF-0001, FDS-101 Avatar online ring stroke 2 */
+}

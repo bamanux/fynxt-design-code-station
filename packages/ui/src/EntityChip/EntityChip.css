@@ -1,0 +1,33 @@
+/* Spec: FDS-101 Entity Chip (361:2): height 28, padding-x spacing/sm, gap 6, radius/default,
+   surface/card + border/default, icon 16 icon/color, Body/XS text/muted-foreground. */
+.fx-entity-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--fx-spacing-1) * 1.5);
+  block-size: calc(var(--fx-spacing-7));
+  padding-inline: var(--fx-spacing-sm);
+  border: var(--fx-border-width-thin) solid var(--fx-border-default);
+  border-radius: var(--fx-radius-default);
+  background: var(--fx-surface-card);
+  color: var(--fx-text-muted-foreground);
+  font-family: var(--fx-typography-body-xs-font-family);
+  font-weight: var(--fx-typography-body-xs-font-weight);
+  font-size: var(--fx-typography-body-xs-font-size);
+  line-height: var(--fx-typography-body-xs-line-height);
+  white-space: nowrap;
+}
+.fx-entity-chip__icon { display: inline-flex; color: var(--fx-icon-color); }
+.fx-entity-chip__icon > svg,
+.fx-entity-chip__remove > svg { inline-size: var(--fx-spacing-4); block-size: var(--fx-spacing-4); }
+.fx-entity-chip__link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.fx-entity-chip__remove { display: inline-flex; padding: 0; border: 0; background: none; color: var(--fx-icon-color); cursor: pointer; }
+.fx-entity-chip__link:focus-visible,
+.fx-entity-chip__remove:focus-visible { outline: var(--fx-border-width-thick) solid var(--fx-border-focus); }

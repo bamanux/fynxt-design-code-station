@@ -1,0 +1,46 @@
+/* Spec: FDS-101 Dropdown Menu (345:67): padding spacing/xs, gap 2, radius/default, surface/popover +
+   border/default, elevation/sm. Menu Item (344:15): height 36, padding-x spacing/md, gap spacing/sm,
+   radius/sm, Body/SM; Hover surface/background; Selected surface/selected + check. */
+.fx-menu { position: relative; display: inline-flex; }
+.fx-menu__list {
+  position: absolute;
+  inset-block-start: calc(100% + var(--fx-spacing-1));
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 2px; /* OBSERVED: no token — DCF-0001, FDS-101 Dropdown Menu item gap 2 */
+  min-inline-size: calc(var(--fx-spacing-12) * 4);
+  padding: var(--fx-spacing-xs);
+  border: var(--fx-border-width-thin) solid var(--fx-border-default);
+  border-radius: var(--fx-radius-default);
+  background: var(--fx-surface-popover);
+  box-shadow: var(--fx-elevation-sm);
+}
+.fx-menu__list[hidden] { display: none; }
+.fx-menu__list--end { inset-inline-end: 0; }
+.fx-menu__list--start { inset-inline-start: 0; }
+.fx-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--fx-spacing-sm);
+  block-size: var(--fx-spacing-9);
+  padding-inline: var(--fx-spacing-md);
+  border: 0;
+  border-radius: var(--fx-radius-sm);
+  background: transparent;
+  color: var(--fx-text-foreground);
+  font-family: var(--fx-typography-body-sm-font-family);
+  font-weight: var(--fx-typography-body-sm-font-weight);
+  font-size: var(--fx-typography-body-sm-font-size);
+  line-height: var(--fx-typography-body-sm-line-height);
+  text-align: start;
+  cursor: pointer;
+}
+.fx-menu__item:hover:not(:disabled),
+.fx-menu__item:focus-visible { background: var(--fx-surface-background); outline: 0; }
+.fx-menu__item:focus-visible { box-shadow: inset 0 0 0 var(--fx-border-width-thick) var(--fx-border-focus); }
+.fx-menu__item[data-selected] { background: var(--fx-surface-selected); }
+.fx-menu__item[data-destructive] { color: var(--fx-status-destructive); }
+.fx-menu__item:disabled { opacity: var(--fx-opacity-disabled); cursor: not-allowed; }
+.fx-menu__label { flex: 1; }
+.fx-menu__check { inline-size: var(--fx-spacing-4); block-size: var(--fx-spacing-4); color: var(--fx-icon-color); }

@@ -1,0 +1,33 @@
+/* Spec: FDS-101 Stat Card (359:54): padding spacing/xl, gap spacing/sm, radius/lg, surface/card +
+   border/default; Label/XS muted; value Heading/LG; caption Body/XS muted. */
+.fx-stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fx-spacing-sm);
+  min-inline-size: 0;
+  padding: var(--fx-spacing-xl);
+  border: var(--fx-border-width-thin) solid var(--fx-border-default);
+  border-radius: var(--fx-radius-lg);
+  background: var(--fx-surface-card);
+}
+.fx-stat[data-selected] { border-color: var(--fx-brand-primary); }
+.fx-stat__label-row { display: flex; align-items: center; gap: var(--fx-spacing-1); }
+.fx-stat__label,
+.fx-stat__caption {
+  color: var(--fx-text-muted-foreground);
+  font-family: var(--fx-typography-label-xs-font-family);
+  font-weight: var(--fx-typography-label-xs-font-weight);
+  font-size: var(--fx-typography-label-xs-font-size);
+  line-height: var(--fx-typography-label-xs-line-height);
+}
+.fx-stat__caption { font-weight: var(--fx-typography-body-xs-font-weight); }
+.fx-stat__value {
+  color: var(--fx-text-foreground);
+  font-family: var(--fx-typography-heading-lg-font-family);
+  font-weight: var(--fx-typography-heading-lg-font-weight);
+  font-size: var(--fx-typography-heading-lg-font-size);
+  line-height: var(--fx-typography-heading-lg-line-height);
+}
+.fx-stat__help { display: inline-flex; padding: 0; border: 0; background: none; color: var(--fx-icon-color); cursor: help; }
+.fx-stat__help > svg { inline-size: var(--fx-spacing-3); block-size: var(--fx-spacing-3); }
+.fx-stat__help:focus-visible { outline: var(--fx-border-width-thick) solid var(--fx-border-focus); }

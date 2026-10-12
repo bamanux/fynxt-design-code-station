@@ -1,0 +1,98 @@
+/* Layout for the Activity Workspace candidate template (DCF-0001). Components bring their own
+   styles from @fynxt/ui; this file only arranges regions, with token variables. */
+.fx-aw { display: flex; flex-direction: column; gap: var(--fx-spacing-4); }
+.fx-aw-top { position: relative; }
+.fx-aw-top__actions {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--fx-spacing-2);
+}
+.fx-aw-top .fx-tabs__list { min-block-size: var(--fx-spacing-10); padding-inline-end: calc(var(--fx-spacing-12) * 4); }
+.fx-aw-content { display: flex; flex-direction: column; gap: var(--fx-spacing-4); padding-block-start: var(--fx-spacing-4); }
+
+.fx-aw-insights {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fx-spacing-3);
+  padding: var(--fx-spacing-4);
+  border: var(--fx-border-width-thin) solid var(--fx-border-default);
+  border-radius: var(--fx-radius-lg);
+  background: var(--fx-surface-card);
+}
+.fx-aw-insights__header { display: flex; align-items: center; justify-content: space-between; }
+.fx-aw-insights__title,
+.fx-aw-comments__title {
+  margin: 0;
+  font-family: var(--fx-typography-heading-base-font-family);
+  font-weight: var(--fx-typography-heading-base-font-weight);
+  font-size: var(--fx-typography-heading-base-font-size);
+  line-height: var(--fx-typography-heading-base-line-height);
+}
+.fx-aw-insights__metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(calc(var(--fx-spacing-10) * 4), 1fr));
+  gap: var(--fx-spacing-3);
+}
+.fx-aw-insights__metrics[hidden] { display: none; }
+
+.fx-aw-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fx-spacing-3);
+  padding: var(--fx-spacing-3) var(--fx-spacing-4);
+  border-radius: var(--fx-radius-lg);
+  background: var(--fx-surface-card);
+}
+.fx-aw-filters__chips { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fx-spacing-2); }
+.fx-aw-filters__search { flex: 0 1 calc(var(--fx-spacing-10) * 7); }
+
+.fx-aw-list { display: flex; flex-direction: column; gap: var(--fx-spacing-3); margin: 0; padding: 0; list-style: none; }
+.fx-aw-state { display: flex; flex-direction: column; align-items: center; gap: var(--fx-spacing-3); padding-block: var(--fx-spacing-8); }
+.fx-aw-muted { margin: 0; color: var(--fx-text-muted-foreground); font-family: var(--fx-typography-body-sm-font-family); font-size: var(--fx-typography-body-sm-font-size); }
+.fx-aw-clamp { display: -webkit-box; overflow: hidden; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
+.fx-aw-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--fx-brand-primary);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.fx-aw-link:focus-visible { outline: var(--fx-border-width-thick) solid var(--fx-border-focus); }
+.fx-aw-followups { margin: 0; padding-inline-start: var(--fx-spacing-4); }
+
+.fx-aw-form { display: flex; flex-wrap: wrap; gap: var(--fx-spacing-4); }
+.fx-aw-form > .fx-alert,
+.fx-aw-form__field { flex: 1 1 100%; min-inline-size: 0; }
+.fx-aw-form__field--half { flex-basis: calc(50% - var(--fx-spacing-2)); }
+
+.fx-aw-comments {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fx-spacing-3);
+  padding: var(--fx-spacing-4);
+  border: var(--fx-border-width-thin) solid var(--fx-border-default);
+  border-radius: var(--fx-radius-lg);
+}
+.fx-aw-comments__header { display: flex; align-items: center; justify-content: space-between; gap: var(--fx-spacing-3); }
+.fx-aw-comments__add { display: flex; flex-direction: column; gap: var(--fx-spacing-2); }
+.fx-aw-comments__add-actions { display: flex; justify-content: flex-end; }
+.fx-aw-comments__list { display: flex; flex-direction: column; gap: var(--fx-spacing-3); margin: 0; padding: 0; list-style: none; }
+.fx-aw-comments__item { display: flex; gap: var(--fx-spacing-2); }
+.fx-aw-comments__meta,
+.fx-aw-comments__text { margin: 0; font-family: var(--fx-typography-body-sm-font-family); font-size: var(--fx-typography-body-sm-font-size); line-height: var(--fx-typography-body-sm-line-height); }
+.fx-aw-comments__meta { color: var(--fx-text-muted-foreground); font-size: var(--fx-typography-body-xs-font-size); }
+.fx-aw-comments__author { color: var(--fx-text-foreground); font-weight: var(--fx-typography-label-xs-font-weight); }
+
+@media (max-width: 800px) { /* OBSERVED: no token — DCF-0001, Studio breakpoint (D11: no breakpoint tokens) */
+  .fx-aw-top__actions { position: static; justify-content: flex-end; margin-block-end: var(--fx-spacing-2); }
+  .fx-aw-top .fx-tabs__list { padding-inline-end: 0; }
+  .fx-aw-filters__search { flex-basis: 100%; }
+  .fx-aw-form__field--half { flex-basis: 100%; }
+}
