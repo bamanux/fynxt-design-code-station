@@ -1,0 +1,24 @@
+{
+  "name": "@fynxt/studio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "FDI Studio — the product team's interface to FDI (FYNXT Design Inspector): submit requests, review case files, approve gates, run FDI, browse the library and the page gallery.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "start": "tsx server/main.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "0.3.296",
+    "@fynxt/templates": "0.0.0",
+    "@fynxt/tokens": "0.2.0",
+    "@fynxt/ui": "0.1.0",
+    "dompurify": "3.4.16",
+    "lucide-react": "1.55.0",
+    "marked": "18.1.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "tsx": "4.23.15"
+  }
+}

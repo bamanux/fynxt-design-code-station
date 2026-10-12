@@ -1,0 +1,45 @@
+/* Spec: fds-101-components.md § Tabs (FDS-101 75:18 primary, 318:5979 secondary). */
+.fx-tabs__list { display: flex; gap: var(--fx-spacing-1); overflow-x: auto; }
+.fx-tabs--primary .fx-tabs__list { border-block-end: var(--fx-border-width-thin) solid var(--fx-border-default); gap: 0; }
+
+.fx-tabs__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--fx-spacing-1);
+  block-size: var(--fx-spacing-10);
+  padding: 0 var(--fx-spacing-4);
+  background: transparent;
+  border: 0;
+  border-block-end: var(--fx-border-width-thick) solid transparent;
+  color: var(--fx-text-muted-foreground);
+  font-family: var(--fx-typography-body-sm-medium-font-family);
+  font-weight: var(--fx-typography-body-sm-medium-font-weight);
+  font-size: var(--fx-typography-body-sm-medium-font-size);
+  line-height: var(--fx-typography-body-sm-medium-line-height);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.fx-tabs__tab:focus-visible { outline: var(--fx-border-width-thick) solid var(--fx-border-focus); outline-offset: calc(var(--fx-border-width-thick) * -1); }
+.fx-tabs__tab:disabled { opacity: var(--fx-opacity-disabled); cursor: not-allowed; }
+
+/* FDS-101 hover switches to Bold. The hidden bold copy reserves width so the row does not shift. */
+.fx-tabs__label { display: inline-grid; }
+.fx-tabs__label::after {
+  content: attr(data-label);
+  font-weight: var(--fx-font-weight-bold);
+  block-size: 0;
+  visibility: hidden;
+  overflow: hidden;
+}
+.fx-tabs__tab:hover:not(:disabled):not([aria-selected="true"]) { color: var(--fx-brand-primary); font-weight: var(--fx-font-weight-bold); }
+.fx-tabs__tab[aria-selected="true"] { color: var(--fx-brand-primary); background: var(--fx-color-neutral-200); }
+
+.fx-tabs--primary .fx-tabs__tab:hover:not(:disabled):not([aria-selected="true"]) { background: var(--fx-color-neutral-100); }
+.fx-tabs--primary .fx-tabs__tab[aria-selected="true"] { border-block-end-color: var(--fx-brand-primary); }
+
+.fx-tabs--secondary .fx-tabs__tab { background: var(--fx-surface-card); border-radius: var(--fx-radius-default); border-block-end: 0; }
+.fx-tabs--secondary .fx-tabs__tab:hover:not(:disabled):not([aria-selected="true"]) { background: var(--fx-surface-background); }
+.fx-tabs--secondary .fx-tabs__tab[aria-selected="true"] { background: var(--fx-color-neutral-200); }
+
+.fx-tabs__panel { padding-block-start: var(--fx-spacing-4); }
+.fx-tabs__panel:focus-visible { outline: var(--fx-border-width-thick) solid var(--fx-border-focus); }

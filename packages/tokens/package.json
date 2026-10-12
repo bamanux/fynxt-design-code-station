@@ -1,0 +1,12 @@
+{
+  "name": "@fynxt/tokens",
+  "version": "0.2.0",
+  "private": true,
+  "description": "GENERATED from fynxt-product-experience-engine/design-system/tokens/tokens.json — run `npm run tokens:build` at the repo root. Never edit dist/ by hand.",
+  "type": "module",
+  "exports": {
+    ".": "./dist/tokens.ts",
+    "./tokens.css": "./dist/tokens.css",
+    "./tokens.json": "./dist/tokens.json"
+  }
+}

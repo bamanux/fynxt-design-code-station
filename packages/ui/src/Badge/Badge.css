@@ -1,0 +1,25 @@
+/* Spec: fds-101-components.md § Badge (FDS-101 64:39). */
+.fx-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px var(--fx-spacing-2); /* OBSERVED: no token — FDS-101 Badge vertical padding 3 is off the spacing scale */
+  border-radius: var(--fx-radius-default);
+  font-family: var(--fx-typography-label-xs-font-family);
+  font-weight: var(--fx-typography-label-xs-font-weight);
+  font-size: var(--fx-typography-label-xs-font-size);
+  line-height: var(--fx-typography-label-xs-line-height);
+  white-space: nowrap;
+}
+.fx-badge--soft.fx-badge--neutral { background: var(--fx-surface-background); color: var(--fx-text-muted-foreground); }
+.fx-badge--soft.fx-badge--primary { background: var(--fx-surface-selected); color: var(--fx-brand-primary); }
+.fx-badge--soft.fx-badge--success { background: var(--fx-feedback-success-bg); color: var(--fx-status-success); }
+.fx-badge--soft.fx-badge--warning { background: var(--fx-feedback-warning-bg); color: var(--fx-status-warning); }
+.fx-badge--soft.fx-badge--error { background: var(--fx-feedback-error-bg); color: var(--fx-status-error); }
+.fx-badge--soft.fx-badge--info { background: var(--fx-feedback-info-bg); color: var(--fx-status-info); }
+.fx-badge--solid { color: var(--fx-text-on-primary); }
+.fx-badge--solid.fx-badge--neutral { background: var(--fx-text-muted-foreground); }
+.fx-badge--solid.fx-badge--primary { background: var(--fx-brand-primary); }
+.fx-badge--solid.fx-badge--success { background: var(--fx-status-success); }
+.fx-badge--solid.fx-badge--warning { background: var(--fx-status-warning); }
+.fx-badge--solid.fx-badge--error { background: var(--fx-status-error); }
+.fx-badge--solid.fx-badge--info { background: var(--fx-status-info); }

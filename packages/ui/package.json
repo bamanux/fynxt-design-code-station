@@ -1,0 +1,24 @@
+{
+  "name": "@fynxt/ui",
+  "version": "0.1.0",
+  "private": true,
+  "description": "FYNXT component library — the single source for components across every FYNXT surface. Implements design-system/components/fds-101-components.md (engine repo). Status: DRAFT pending Product Designer approval.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles.css": "./src/styles.css"
+  },
+  "peerDependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "dependencies": {
+    "@fynxt/tokens": "0.2.0",
+    "lucide-react": "1.55.0"
+  },
+  "devDependencies": {
+    "@figma/code-connect": "2.0.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  }
+}

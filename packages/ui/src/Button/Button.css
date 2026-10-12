@@ -1,0 +1,66 @@
+/* Spec: design-system/components/fds-101-components.md § Button (FDS-101 62:745). */
+.fx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--fx-spacing-2);
+  border: var(--fx-border-width-thin) solid transparent;
+  border-radius: var(--fx-radius-default);
+  font-family: var(--fx-typography-button-lg-font-family);
+  font-weight: var(--fx-typography-button-lg-font-weight);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--fx-duration-fast) var(--fx-easing-standard),
+    border-color var(--fx-duration-fast) var(--fx-easing-standard);
+}
+.fx-btn:focus-visible {
+  outline: var(--fx-border-width-thick) solid var(--fx-border-focus);
+  outline-offset: 0;
+}
+.fx-btn:disabled {
+  opacity: var(--fx-opacity-disabled);
+  cursor: not-allowed;
+}
+.fx-btn[aria-busy="true"] { opacity: 1; cursor: progress; }
+.fx-btn__icon { display: inline-flex; inline-size: var(--fx-spacing-4); block-size: var(--fx-spacing-4); }
+.fx-btn__icon > svg { inline-size: 100%; block-size: 100%; }
+
+/* Sizes */
+.fx-btn--s {
+  block-size: var(--fx-spacing-8);
+  padding-inline: var(--fx-spacing-3);
+  font-size: var(--fx-typography-button-md-font-size);
+  line-height: var(--fx-typography-button-md-line-height);
+}
+.fx-btn--m {
+  block-size: var(--fx-spacing-10);
+  padding-inline: var(--fx-spacing-4);
+  font-size: var(--fx-typography-button-lg-font-size);
+  line-height: var(--fx-typography-button-lg-line-height);
+}
+.fx-btn--l {
+  block-size: var(--fx-spacing-12);
+  padding-inline: var(--fx-spacing-5);
+  font-size: var(--fx-typography-button-lg-font-size);
+  line-height: var(--fx-typography-button-lg-line-height);
+}
+
+/* Variants */
+.fx-btn--primary { background: var(--fx-brand-primary); color: var(--fx-text-on-primary); }
+.fx-btn--primary:hover:not(:disabled) { background: var(--fx-color-navy-600); }
+.fx-btn--primary:active:not(:disabled) { background: var(--fx-color-navy-700); }
+
+.fx-btn--secondary {
+  background: var(--fx-surface-card);
+  border-color: var(--fx-border-default);
+  color: var(--fx-text-foreground);
+}
+.fx-btn--secondary:hover:not(:disabled) { background: var(--fx-color-neutral-50); border-color: var(--fx-border-strong); }
+.fx-btn--secondary:active:not(:disabled) { background: var(--fx-color-neutral-100); border-color: var(--fx-border-default); }
+
+.fx-btn--ghost { background: transparent; color: var(--fx-text-foreground); }
+.fx-btn--ghost:hover:not(:disabled) { background: var(--fx-color-neutral-50); }
+.fx-btn--ghost:active:not(:disabled) { background: var(--fx-color-neutral-100); }
+
+/* FDS-101 defines no hover/pressed change for Destructive (open question in the spec). */
+.fx-btn--destructive { background: var(--fx-status-destructive); color: var(--fx-text-on-primary); }

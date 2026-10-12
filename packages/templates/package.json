@@ -1,0 +1,10 @@
+{
+  "name": "@fynxt/templates",
+  "version": "0.0.0",
+  "private": true,
+  "description": "FYNXT page templates (config-driven). Each template lives in src/<TEMPLATE-ID>/ and imports only @fynxt/ui and @fynxt/tokens. Empty until the first template is approved into the Station (see DL-0001 point 1 / FYNXT-TPL-LIST-002 migration).",
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "peerDependencies": { "react": "^18.3.1" },
+  "dependencies": { "@fynxt/ui": "0.1.0", "@fynxt/tokens": "0.2.0" }
+}

@@ -1,0 +1,85 @@
+{
+  "name": "fdi-vscode",
+  "displayName": "FDI — FYNXT Design Inspector",
+  "description": "Use FDI from VS Code: see the cases that need you, open case files, review and approve, submit design requests and start FDI runs — backed by FDI Studio.",
+  "version": "0.1.0",
+  "publisher": "fynxt",
+  "private": true,
+  "license": "UNLICENSED",
+  "engines": { "vscode": "^1.95.0" },
+  "categories": ["Other"],
+  "main": "./out/extension.js",
+  "activationEvents": ["onStartupFinished"],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [{ "id": "fdi", "title": "FDI", "icon": "media/fdi.svg" }]
+    },
+    "views": {
+      "fdi": [
+        { "id": "fdi.cases", "name": "Cases" },
+        { "id": "fdi.actions", "name": "Quick actions", "type": "webview" }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "fdi.cases",
+        "contents": "FDI Studio isn't reachable at the configured URL.\n[Start FDI Studio](command:fdi.startStudio)\n[Set your name & role](command:fdi.setIdentity)\n[Open settings](command:fdi.openSettings)"
+      }
+    ],
+    "commands": [
+      { "command": "fdi.openStudio", "title": "Open FDI Studio", "category": "FDI", "icon": "$(browser)" },
+      { "command": "fdi.newRequest", "title": "New Design Request", "category": "FDI", "icon": "$(add)" },
+      { "command": "fdi.openCase", "title": "Open Case…", "category": "FDI" },
+      { "command": "fdi.openLibrary", "title": "Open Library (tokens & components)", "category": "FDI" },
+      { "command": "fdi.refresh", "title": "Refresh Cases", "category": "FDI", "icon": "$(refresh)" },
+      { "command": "fdi.startStudio", "title": "Start FDI Studio Server", "category": "FDI", "icon": "$(play)" },
+      { "command": "fdi.setIdentity", "title": "Set Your Name & Role", "category": "FDI", "icon": "$(account)" },
+      { "command": "fdi.openCaseFile", "title": "Open Case File (Markdown)", "category": "FDI", "icon": "$(go-to-file)" },
+      { "command": "fdi.copyClaudeCommand", "title": "Copy Claude Code Command for This Case", "category": "FDI", "icon": "$(terminal)" },
+      { "command": "fdi.openSettings", "title": "Open FDI Settings", "category": "FDI" }
+    ],
+    "menus": {
+      "view/title": [
+        { "command": "fdi.newRequest", "when": "view == fdi.cases", "group": "navigation@1" },
+        { "command": "fdi.refresh", "when": "view == fdi.cases", "group": "navigation@2" },
+        { "command": "fdi.openStudio", "when": "view == fdi.cases", "group": "navigation@3" },
+        { "command": "fdi.setIdentity", "when": "view == fdi.cases", "group": "navigation@4" }
+      ],
+      "view/item/context": [
+        { "command": "fdi.openCaseFile", "when": "view == fdi.cases && viewItem == case", "group": "inline@1" },
+        { "command": "fdi.copyClaudeCommand", "when": "view == fdi.cases && viewItem == case", "group": "inline@2" }
+      ],
+      "commandPalette": [
+        { "command": "fdi.openCaseFile", "when": "false" },
+        { "command": "fdi.copyClaudeCommand", "when": "false" }
+      ]
+    },
+    "configuration": {
+      "title": "FDI",
+      "properties": {
+        "fdi.studioUrl": { "type": "string", "default": "http://127.0.0.1:5190", "description": "URL of FDI Studio (local dev server or the deployed Studio)." },
+        "fdi.userName": { "type": "string", "default": "", "description": "Your name, recorded on requests, feedback and approvals." },
+        "fdi.userRole": {
+          "type": "string",
+          "default": "",
+          "enum": ["", "Product Designer", "UI Code Reviewer", "Product Manager", "Project Manager", "Business Analyst", "Developer", "QA / Tester", "Stakeholder"],
+          "description": "Your role. Decides which approvals and FDI runs you can trigger (governed by fdi.config.json in the engine)."
+        },
+        "fdi.stationPath": { "type": "string", "default": "", "description": "Local path to the Design Code Station repo, used by 'Start FDI Studio Server'. Auto-detected from the workspace when empty." },
+        "fdi.enginePath": { "type": "string", "default": "", "description": "Local path to the engine repo, used to open case files. Auto-detected from the workspace when empty." },
+        "fdi.refreshSeconds": { "type": "number", "default": 30, "minimum": 10, "description": "How often the Cases view refreshes." }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p .",
+    "watch": "tsc -w -p .",
+    "package": "npm run compile && vsce package --no-dependencies --allow-missing-repository -o fdi-vscode-0.1.0.vsix"
+  },
+  "devDependencies": {
+    "@types/node": "24.0.0",
+    "@types/vscode": "1.95.0",
+    "@vscode/vsce": "4.0.0",
+    "typescript": "5.6.3"
+  }
+}

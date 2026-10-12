@@ -1,0 +1,9 @@
+node_modules/
+dist/
+!packages/tokens/dist/
+apps/studio/dist-server/
+.env
+studio.mcp.json
+*.log
+.DS_Store
+coverage/

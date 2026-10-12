@@ -1,0 +1,12 @@
+/* Spec: fds-101-components.md § Card (FDS-101 74:46). */
+.fx-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fx-spacing-3);
+  padding: var(--fx-spacing-4);
+  background: var(--fx-surface-card);
+  border: var(--fx-border-width-thin) solid var(--fx-border-default);
+  border-radius: var(--fx-radius-xl);
+  color: var(--fx-text-foreground);
+}
+.fx-card--elevated { border-color: var(--fx-border-light); box-shadow: var(--fx-shadow-sm); }

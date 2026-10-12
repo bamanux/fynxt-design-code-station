@@ -1,0 +1,16 @@
+/* Not an FDS-101 component: FDS-101's Button "Loading" state does not specify its indicator. */
+.fx-spinner {
+  display: inline-block;
+  inline-size: var(--fx-spacing-4);
+  block-size: var(--fx-spacing-4);
+  border: var(--fx-border-width-thick) solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: var(--fx-radius-full);
+  animation: fx-spin calc(var(--fx-duration-slower) * 1.5) linear infinite;
+}
+@keyframes fx-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fx-spinner { animation-duration: calc(var(--fx-duration-slower) * 6); }
+}

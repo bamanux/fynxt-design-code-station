@@ -1,0 +1,545 @@
+/* GENERATED from design-system/tokens/tokens.json (v0.2.0, DRAFT) — do not edit. */
+:root {
+  --fx-color-navy-50: #ccd4e0;
+  --fx-color-navy-100: #99a8c2;
+  --fx-color-navy-200: #667da3;
+  --fx-color-navy-300: #335185;
+  --fx-color-navy-400: #003d99;
+  --fx-color-navy-500: #002666;
+  --fx-color-navy-600: #001e52;
+  --fx-color-navy-700: #00173d;
+  --fx-color-navy-800: #000f29;
+  --fx-color-navy-900: #000814;
+  --fx-color-blue-50: #ccebff;
+  --fx-color-blue-100: #99d6ff;
+  --fx-color-blue-200: #66c2ff;
+  --fx-color-blue-300: #33adff;
+  --fx-color-blue-500: #0099ff;
+  --fx-color-blue-600: #007acc;
+  --fx-color-blue-700: #005c99;
+  --fx-color-blue-800: #003d66;
+  --fx-color-blue-900: #001f33;
+  --fx-color-neutral-0: #ffffff;
+  --fx-color-neutral-50: #f9f9fb;
+  --fx-color-neutral-100: #f3f4f6;
+  --fx-color-neutral-200: #e5e7eb;
+  --fx-color-neutral-300: #d1d5db;
+  --fx-color-neutral-400: #9ca3af;
+  --fx-color-neutral-500: #6b7280;
+  --fx-color-neutral-700: #404040;
+  --fx-color-neutral-900: #1f2123;
+  --fx-color-amber-500: #faaf40;
+  --fx-color-green-500: #10b981;
+  --fx-color-green-600: #13b197;
+  --fx-color-teal-500: #4ab7aa;
+  --fx-color-red-500: #ef4444;
+  --fx-color-red-600: #e5381d;
+  --fx-color-info-500: #3b82f6;
+  --fx-color-warning-500: #f59e0b;
+  --fx-color-chart-1: #528fff;
+  --fx-color-chart-2: #4ab7aa;
+  --fx-color-chart-3: #f58c42;
+  --fx-color-chart-4: #fb71a0;
+  --fx-color-chart-5: #9988fd;
+  --fx-color-slate-50: #f1f5f9;
+  --fx-color-slate-100: #e2e8f0;
+  --fx-color-slate-300: #94a3b8;
+  --fx-color-slate-500: #475569;
+  --fx-color-slate-600: #334155;
+  --fx-color-slate-700: #1e293b;
+  --fx-color-slate-800: #131c2e;
+  --fx-color-slate-900: #0b1220;
+  --fx-color-slate-950: #060b16;
+  --fx-brand-primary: var(--fx-color-navy-500);
+  --fx-brand-primary-foreground: var(--fx-color-neutral-0);
+  --fx-brand-accent: var(--fx-color-navy-500);
+  --fx-brand-accent-foreground: var(--fx-color-neutral-0);
+  --fx-brand-secondary-foreground: var(--fx-color-navy-500);
+  --fx-surface-background: var(--fx-color-neutral-50);
+  --fx-surface-card: var(--fx-color-neutral-0);
+  --fx-surface-popover: var(--fx-color-neutral-0);
+  --fx-surface-sidebar: var(--fx-color-neutral-0);
+  --fx-surface-input: var(--fx-color-neutral-100);
+  --fx-surface-selected: #eef1f7;
+  --fx-text-foreground: var(--fx-color-neutral-700);
+  --fx-text-muted-foreground: #858585;
+  --fx-text-muted: #b3b3b3;
+  --fx-text-on-primary: var(--fx-color-neutral-0);
+  --fx-text-label: #858585;
+  --fx-text-placeholder: var(--fx-color-neutral-500);
+  --fx-text-tab-bg: var(--fx-color-neutral-200);
+  --fx-border-default: var(--fx-color-neutral-200);
+  --fx-border-light: var(--fx-color-neutral-100);
+  --fx-border-strong: var(--fx-color-neutral-300);
+  --fx-border-focus: var(--fx-color-blue-500);
+  --fx-status-success: var(--fx-color-green-500);
+  --fx-status-warning: var(--fx-color-warning-500);
+  --fx-status-error: var(--fx-color-red-500);
+  --fx-status-info: var(--fx-color-info-500);
+  --fx-status-destructive: var(--fx-color-red-600);
+  --fx-chart-1: var(--fx-color-chart-1);
+  --fx-chart-2: var(--fx-color-chart-2);
+  --fx-chart-3: var(--fx-color-chart-3);
+  --fx-chart-4: var(--fx-color-chart-4);
+  --fx-chart-5: var(--fx-color-chart-5);
+  --fx-focus-ring: var(--fx-color-blue-500);
+  --fx-feedback-info-bg: #e9f1fc;
+  --fx-feedback-success-bg: #e6f6f0;
+  --fx-feedback-warning-bg: #fef5e6;
+  --fx-feedback-error-bg: #fcede9;
+  --fx-spacing-0: 0px;
+  --fx-spacing-1: 4px;
+  --fx-spacing-2: 8px;
+  --fx-spacing-3: 12px;
+  --fx-spacing-4: 16px;
+  --fx-spacing-5: 20px;
+  --fx-spacing-6: 24px;
+  --fx-spacing-7: 28px;
+  --fx-spacing-8: 32px;
+  --fx-spacing-9: 36px;
+  --fx-spacing-10: 40px;
+  --fx-spacing-11: 44px;
+  --fx-spacing-12: 48px;
+  --fx-spacing-xs: 4px;
+  --fx-spacing-sm: 8px;
+  --fx-spacing-md: 12px;
+  --fx-spacing-lg: 16px;
+  --fx-spacing-xl: 20px;
+  --fx-spacing-2xl: 24px;
+  --fx-spacing-3xl: 32px;
+  --fx-spacing-4xl: 40px;
+  --fx-spacing-5xl: 48px;
+  --fx-radius-sm: 2px;
+  --fx-radius-default: 4px;
+  --fx-radius-md: 6px;
+  --fx-radius-lg: 8px;
+  --fx-radius-xl: 12px;
+  --fx-radius-full: 9999px;
+  --fx-font-size-xxs: 10px;
+  --fx-font-size-xs: 12px;
+  --fx-font-size-sm: 14px;
+  --fx-font-size-base: 16px;
+  --fx-font-size-lg: 20px;
+  --fx-font-size-xl: 24px;
+  --fx-font-size-2xl: 32px;
+  --fx-font-size-3xl: 48px;
+  --fx-font-weight-light: 300;
+  --fx-font-weight-normal: 400;
+  --fx-font-weight-medium: 500;
+  --fx-font-weight-semibold: 600;
+  --fx-font-weight-bold: 700;
+  --fx-font-family-heading: "Sora", sans-serif;
+  --fx-font-family-body: "Lexend", sans-serif;
+  --fx-line-height-tight: 20px;
+  --fx-line-height-normal: 24px;
+  --fx-line-height-relaxed: 28px;
+  --fx-line-height-loose: 32px;
+  --fx-letter-spacing-tight: -0.2px;
+  --fx-letter-spacing-normal: 0px;
+  --fx-letter-spacing-wide: 0.5px;
+  --fx-font-title: 24px;
+  --fx-font-body: 14px;
+  --fx-font-label: 13px;
+  --fx-control-height: 36px;
+  --fx-control-padding-x: 12px;
+  --fx-control-radius: 6px;
+  --fx-field-gap: 16px;
+  --fx-card-padding: 32px;
+  --fx-card-radius: 8px;
+  --fx-card-width: 420px;
+  --fx-duration-instant: 100ms;
+  --fx-duration-fast: 150ms;
+  --fx-duration-base: 200ms;
+  --fx-duration-slow: 300ms;
+  --fx-duration-slower: 500ms;
+  --fx-easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --fx-easing-in: cubic-bezier(0.4, 0, 1, 1);
+  --fx-easing-out: cubic-bezier(0, 0, 0.2, 1);
+  --fx-easing-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --fx-easing-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --fx-easing-power: cubic-bezier(0.16, 1, 0.3, 1);
+  --fx-border-width-thin: 1px;
+  --fx-border-width-medium: 1.5px;
+  --fx-border-width-thick: 2px;
+  --fx-ring-width: 2px;
+  --fx-opacity-disabled: 0.5;
+  --fx-opacity-muted: 0.7;
+  --fx-icon-color: var(--fx-text-foreground);
+  --fx-elevation-sm: 0px 1px 3px 0px #0000001a, 0px 1px 2px 0px #0000000f;
+  --fx-shadow-sm: 0px 1px 2px 0px #0000000d;
+  --fx-shadow-md: 0px 2px 12px 2px #2121211f;
+  --fx-shadow-lg: 0px 10px 15px -3px #0000001a, 0px 4px 6px -2px #0000000d;
+  --fx-shadow-xl: 0px 20px 60px 0px #0000004d;
+  --fx-shadow-2xl: 0px 25px 50px -12px #00000040;
+  --fx-typography-table-cell-value-font-family: var(--fx-font-family-body);
+  --fx-typography-table-cell-value-font-weight: 400;
+  --fx-typography-table-cell-value-font-size: 12px;
+  --fx-typography-table-cell-value-line-height: normal;
+  --fx-typography-table-cell-value-letter-spacing: 0em;
+  --fx-typography-table-cell-sub-value-font-family: var(--fx-font-family-body);
+  --fx-typography-table-cell-sub-value-font-weight: 400;
+  --fx-typography-table-cell-sub-value-font-size: 10px;
+  --fx-typography-table-cell-sub-value-line-height: normal;
+  --fx-typography-table-cell-sub-value-letter-spacing: 0em;
+  --fx-typography-heading-3xl-font-family: var(--fx-font-family-heading);
+  --fx-typography-heading-3xl-font-weight: 700;
+  --fx-typography-heading-3xl-font-size: 48px;
+  --fx-typography-heading-3xl-line-height: 58px;
+  --fx-typography-heading-3xl-letter-spacing: -1px;
+  --fx-typography-heading-2xl-font-family: var(--fx-font-family-heading);
+  --fx-typography-heading-2xl-font-weight: 700;
+  --fx-typography-heading-2xl-font-size: 32px;
+  --fx-typography-heading-2xl-line-height: 40px;
+  --fx-typography-heading-2xl-letter-spacing: -0.5px;
+  --fx-typography-heading-xl-font-family: var(--fx-font-family-heading);
+  --fx-typography-heading-xl-font-weight: 600;
+  --fx-typography-heading-xl-font-size: 24px;
+  --fx-typography-heading-xl-line-height: 32px;
+  --fx-typography-heading-xl-letter-spacing: 0px;
+  --fx-typography-heading-lg-font-family: var(--fx-font-family-heading);
+  --fx-typography-heading-lg-font-weight: 600;
+  --fx-typography-heading-lg-font-size: 20px;
+  --fx-typography-heading-lg-line-height: 28px;
+  --fx-typography-heading-lg-letter-spacing: 0px;
+  --fx-typography-heading-base-font-family: var(--fx-font-family-heading);
+  --fx-typography-heading-base-font-weight: 600;
+  --fx-typography-heading-base-font-size: 16px;
+  --fx-typography-heading-base-line-height: 24px;
+  --fx-typography-heading-base-letter-spacing: 0px;
+  --fx-typography-heading-sm-font-family: var(--fx-font-family-heading);
+  --fx-typography-heading-sm-font-weight: 600;
+  --fx-typography-heading-sm-font-size: 14px;
+  --fx-typography-heading-sm-line-height: 20px;
+  --fx-typography-heading-sm-letter-spacing: 0px;
+  --fx-typography-body-base-font-family: var(--fx-font-family-body);
+  --fx-typography-body-base-font-weight: 400;
+  --fx-typography-body-base-font-size: 16px;
+  --fx-typography-body-base-line-height: 24px;
+  --fx-typography-body-base-letter-spacing: 0px;
+  --fx-typography-body-sm-font-family: var(--fx-font-family-body);
+  --fx-typography-body-sm-font-weight: 400;
+  --fx-typography-body-sm-font-size: 14px;
+  --fx-typography-body-sm-line-height: 20px;
+  --fx-typography-body-sm-letter-spacing: 0px;
+  --fx-typography-body-sm-medium-font-family: var(--fx-font-family-body);
+  --fx-typography-body-sm-medium-font-weight: 500;
+  --fx-typography-body-sm-medium-font-size: 14px;
+  --fx-typography-body-sm-medium-line-height: 20px;
+  --fx-typography-body-sm-medium-letter-spacing: 0px;
+  --fx-typography-body-xs-font-family: var(--fx-font-family-body);
+  --fx-typography-body-xs-font-weight: 400;
+  --fx-typography-body-xs-font-size: 12px;
+  --fx-typography-body-xs-line-height: 16px;
+  --fx-typography-body-xs-letter-spacing: 0px;
+  --fx-typography-label-xs-font-family: var(--fx-font-family-body);
+  --fx-typography-label-xs-font-weight: 500;
+  --fx-typography-label-xs-font-size: 12px;
+  --fx-typography-label-xs-line-height: 16px;
+  --fx-typography-label-xs-letter-spacing: 0px;
+  --fx-typography-label-xxs-font-family: var(--fx-font-family-body);
+  --fx-typography-label-xxs-font-weight: 500;
+  --fx-typography-label-xxs-font-size: 10px;
+  --fx-typography-label-xxs-line-height: 14px;
+  --fx-typography-label-xxs-letter-spacing: 0px;
+  --fx-typography-label-form-font-family: var(--fx-font-family-body);
+  --fx-typography-label-form-font-weight: 500;
+  --fx-typography-label-form-font-size: 14px;
+  --fx-typography-label-form-line-height: 20px;
+  --fx-typography-label-form-letter-spacing: 0px;
+  --fx-typography-button-sm-font-family: var(--fx-font-family-body);
+  --fx-typography-button-sm-font-weight: 500;
+  --fx-typography-button-sm-font-size: 12px;
+  --fx-typography-button-sm-line-height: 16px;
+  --fx-typography-button-sm-letter-spacing: 0px;
+  --fx-typography-button-md-font-family: var(--fx-font-family-body);
+  --fx-typography-button-md-font-weight: 500;
+  --fx-typography-button-md-font-size: 13px;
+  --fx-typography-button-md-line-height: 16px;
+  --fx-typography-button-md-letter-spacing: 0px;
+  --fx-typography-button-lg-font-family: var(--fx-font-family-body);
+  --fx-typography-button-lg-font-weight: 500;
+  --fx-typography-button-lg-font-size: 14px;
+  --fx-typography-button-lg-line-height: 20px;
+  --fx-typography-button-lg-letter-spacing: 0px;
+  --fx-typography-table-header-font-family: var(--fx-font-family-body);
+  --fx-typography-table-header-font-weight: 600;
+  --fx-typography-table-header-font-size: 11px;
+  --fx-typography-table-header-line-height: 16px;
+  --fx-typography-table-header-letter-spacing: 0.05em;
+}
+
+[data-theme="dark"] {
+  --fx-brand-primary: var(--fx-color-blue-500);
+  --fx-brand-primary-foreground: var(--fx-color-neutral-0);
+  --fx-brand-accent: var(--fx-color-blue-500);
+  --fx-brand-accent-foreground: var(--fx-color-neutral-0);
+  --fx-brand-secondary-foreground: var(--fx-color-slate-50);
+  --fx-surface-background: var(--fx-color-slate-900);
+  --fx-surface-card: var(--fx-color-slate-800);
+  --fx-surface-popover: var(--fx-color-slate-800);
+  --fx-surface-sidebar: var(--fx-color-slate-900);
+  --fx-surface-input: var(--fx-color-slate-700);
+  --fx-surface-selected: #16243f;
+  --fx-text-foreground: var(--fx-color-slate-50);
+  --fx-text-muted-foreground: var(--fx-color-slate-300);
+  --fx-text-muted: var(--fx-color-slate-500);
+  --fx-text-on-primary: var(--fx-color-neutral-0);
+  --fx-text-label: var(--fx-color-slate-300);
+  --fx-text-placeholder: var(--fx-color-slate-300);
+  --fx-text-tab-bg: #ffffff;
+  --fx-border-default: var(--fx-color-slate-600);
+  --fx-border-light: var(--fx-color-slate-700);
+  --fx-border-strong: var(--fx-color-slate-500);
+  --fx-border-focus: var(--fx-color-blue-500);
+  --fx-status-success: var(--fx-color-green-500);
+  --fx-status-warning: var(--fx-color-warning-500);
+  --fx-status-error: var(--fx-color-red-500);
+  --fx-status-info: var(--fx-color-info-500);
+  --fx-status-destructive: var(--fx-color-red-600);
+  --fx-chart-1: var(--fx-color-chart-1);
+  --fx-chart-2: var(--fx-color-chart-2);
+  --fx-chart-3: var(--fx-color-chart-3);
+  --fx-chart-4: var(--fx-color-chart-4);
+  --fx-chart-5: var(--fx-color-chart-5);
+  --fx-focus-ring: var(--fx-color-blue-500);
+  --fx-feedback-info-bg: #14243f;
+  --fx-feedback-success-bg: #0f2a24;
+  --fx-feedback-warning-bg: #2e2410;
+  --fx-feedback-error-bg: #2e1512;
+}
+
+[data-form-factor="android"] {
+  --fx-font-title: 20px;
+  --fx-font-body: 14px;
+  --fx-font-label: 13px;
+  --fx-control-height: 44px;
+  --fx-control-padding-x: 16px;
+  --fx-control-radius: 8px;
+  --fx-field-gap: 16px;
+  --fx-card-padding: 20px;
+  --fx-card-radius: 12px;
+  --fx-card-width: 340px;
+}
+
+[data-form-factor="ios"] {
+  --fx-font-title: 22px;
+  --fx-font-body: 16px;
+  --fx-font-label: 13px;
+  --fx-control-height: 44px;
+  --fx-control-padding-x: 16px;
+  --fx-control-radius: 12px;
+  --fx-field-gap: 18px;
+  --fx-card-padding: 20px;
+  --fx-card-radius: 16px;
+  --fx-card-width: 340px;
+}
+
+[data-form-factor="tablet"] {
+  --fx-font-title: 24px;
+  --fx-font-body: 16px;
+  --fx-font-label: 14px;
+  --fx-control-height: 48px;
+  --fx-control-padding-x: 18px;
+  --fx-control-radius: 10px;
+  --fx-field-gap: 20px;
+  --fx-card-padding: 32px;
+  --fx-card-radius: 14px;
+  --fx-card-width: 460px;
+}
+
+[data-form-factor="tv"] {
+  --fx-font-title: 36px;
+  --fx-font-body: 22px;
+  --fx-font-label: 20px;
+  --fx-control-height: 64px;
+  --fx-control-padding-x: 28px;
+  --fx-control-radius: 14px;
+  --fx-field-gap: 28px;
+  --fx-card-padding: 56px;
+  --fx-card-radius: 20px;
+  --fx-card-width: 720px;
+}
+
+[data-icon-tone="inverse"] {
+  --fx-icon-color: var(--fx-text-on-primary);
+}
+
+[data-icon-tone="muted"] {
+  --fx-icon-color: var(--fx-text-muted-foreground);
+}
+
+[data-icon-tone="brand"] {
+  --fx-icon-color: var(--fx-brand-primary);
+}
+
+[data-icon-tone="success"] {
+  --fx-icon-color: var(--fx-status-success);
+}
+
+[data-icon-tone="warning"] {
+  --fx-icon-color: var(--fx-status-warning);
+}
+
+[data-icon-tone="error"] {
+  --fx-icon-color: var(--fx-status-error);
+}
+
+[data-icon-tone="info"] {
+  --fx-icon-color: var(--fx-status-info);
+}
+
+[data-icon-tone="destructive"] {
+  --fx-icon-color: var(--fx-status-destructive);
+}
+
+.fx-typo-table-cell-value {
+  font-family: var(--fx-font-family-body);
+  font-weight: 400;
+  font-size: 12px;
+  line-height: normal;
+  letter-spacing: 0em;
+}
+
+.fx-typo-table-cell-sub-value {
+  font-family: var(--fx-font-family-body);
+  font-weight: 400;
+  font-size: 10px;
+  line-height: normal;
+  letter-spacing: 0em;
+}
+
+.fx-typo-heading-3xl {
+  font-family: var(--fx-font-family-heading);
+  font-weight: 700;
+  font-size: 48px;
+  line-height: 58px;
+  letter-spacing: -1px;
+}
+
+.fx-typo-heading-2xl {
+  font-family: var(--fx-font-family-heading);
+  font-weight: 700;
+  font-size: 32px;
+  line-height: 40px;
+  letter-spacing: -0.5px;
+}
+
+.fx-typo-heading-xl {
+  font-family: var(--fx-font-family-heading);
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 32px;
+  letter-spacing: 0px;
+}
+
+.fx-typo-heading-lg {
+  font-family: var(--fx-font-family-heading);
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 28px;
+  letter-spacing: 0px;
+}
+
+.fx-typo-heading-base {
+  font-family: var(--fx-font-family-heading);
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0px;
+}
+
+.fx-typo-heading-sm {
+  font-family: var(--fx-font-family-heading);
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0px;
+}
+
+.fx-typo-body-base {
+  font-family: var(--fx-font-family-body);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0px;
+}
+
+.fx-typo-body-sm {
+  font-family: var(--fx-font-family-body);
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0px;
+}
+
+.fx-typo-body-sm-medium {
+  font-family: var(--fx-font-family-body);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0px;
+}
+
+.fx-typo-body-xs {
+  font-family: var(--fx-font-family-body);
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0px;
+}
+
+.fx-typo-label-xs {
+  font-family: var(--fx-font-family-body);
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0px;
+}
+
+.fx-typo-label-xxs {
+  font-family: var(--fx-font-family-body);
+  font-weight: 500;
+  font-size: 10px;
+  line-height: 14px;
+  letter-spacing: 0px;
+}
+
+.fx-typo-label-form {
+  font-family: var(--fx-font-family-body);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0px;
+}
+
+.fx-typo-button-sm {
+  font-family: var(--fx-font-family-body);
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0px;
+}
+
+.fx-typo-button-md {
+  font-family: var(--fx-font-family-body);
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 16px;
+  letter-spacing: 0px;
+}
+
+.fx-typo-button-lg {
+  font-family: var(--fx-font-family-body);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0px;
+}
+
+.fx-typo-table-header {
+  font-family: var(--fx-font-family-body);
+  font-weight: 600;
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.05em;
+}
