@@ -7,7 +7,7 @@
   padding-inline: var(--fx-spacing-md) var(--fx-spacing-sm);
   border: var(--fx-border-width-thin) solid var(--fx-border-default);
   border-radius: var(--fx-radius-default);
-  background: var(--fx-surface-card);
+  background: var(--fx-surface-selected);
   color: var(--fx-text-foreground);
   font-family: var(--fx-typography-label-xs-font-family);
   font-weight: var(--fx-typography-label-xs-font-weight);

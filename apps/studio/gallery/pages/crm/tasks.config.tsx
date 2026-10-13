@@ -7,7 +7,7 @@
  * The data adapter is the gallery's in-memory DEMO; production supplies the real API (Q24).
  */
 import { createMemoryAdapter, type ActivityRecord, type ActivityWorkspaceConfig } from "@fynxt/templates";
-import { BarChart3, ClipboardList, Home, IdCard, Ticket } from "lucide-react";
+import { BarChart3, ClipboardList, Home, IdCard, Lightbulb, Lock, Settings, Ticket } from "lucide-react";
 
 const users = [
   { value: "u1", label: "John Smith" },
@@ -27,7 +27,7 @@ const records: ActivityRecord[] = [
     id: "t1",
     activityType: "Task",
     title: "Prepare revised pricing proposal",
-    description: "Share the revised pricing with the client and confirm the discount approval with the sales manager before the renewal call.",
+    description: "Share the revised pricing with the client and confirm the discount approval with the sales manager.",
     priority: "medium",
     tags: ["Pricing"],
     scheduledAt: "2026-03-12T10:00",
@@ -67,7 +67,7 @@ const records: ActivityRecord[] = [
     tags: ["Onboarding"],
     scheduledAt: "2026-03-14T09:00",
     status: "upcoming",
-    assignees: ["u3"],
+    assignees: ["u1", "u3"],
     associations: [],
     attachments: [],
     followUps: [],
@@ -96,11 +96,12 @@ const records: ActivityRecord[] = [
 
 // I1 AC13 example status set. "Pending" (AC2) vs "Upcoming" (AC13) is unresolved (C1/Q6);
 // whether Overdue is selectable or derived is unresolved (C2/Q7).
+// Badge colours: In-progress = info per the approved frame; the others are FDI proposals (Q6).
 const statuses = [
-  { value: "upcoming", label: "Upcoming" },
-  { value: "in-progress", label: "In-progress" },
-  { value: "completed", label: "Completed" },
-  { value: "overdue", label: "Overdue" },
+  { value: "upcoming", label: "Upcoming", badge: "neutral" as const },
+  { value: "in-progress", label: "In-progress", badge: "info" as const },
+  { value: "completed", label: "Completed", badge: "success" as const },
+  { value: "overdue", label: "Overdue", badge: "warning" as const },
 ];
 
 const dateFmt = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true });
@@ -125,7 +126,7 @@ export const tasksConfig: ActivityWorkspaceConfig = {
     activeNavId: "tasks",
     logo: "Tenant logo",
     logoMark: "T",
-    userName: "Demo User",
+    userName: "John Doe",
     notifications: 1,
     language: "EN",
   },
@@ -134,19 +135,26 @@ export const tasksConfig: ActivityWorkspaceConfig = {
     { id: "team", label: "My Team's Task" },
   ],
   primaryActionLabel: "Add Task",
-  // workspaceActions: items TBD (Q9) — the kebab is not rendered until they are defined.
+  // Shown as signed off but inactive until their behaviour is defined (decided 2026-10-13).
+  headerTools: [{ id: "tips", label: "Tips", icon: <Lightbulb />, variant: "info", pendingReason: "Not yet defined (Q40)" }],
+  workspaceMenuPendingReason: "Workspace actions not yet defined (Q9)",
   banner: { title: "Automation is on for Tasks", message: "Banner copy TBD (Q10). Shown until dismissed; dismissal persistence TBD." },
   insights: {
     title: "Insights",
     metrics: [
-      { id: "total", label: "Total Task", help: "Definition TBD (Q8)" },
-      { id: "pending", label: "Pending Task", help: "Definition TBD (Q8)" },
-      { id: "inProgress", label: "In-progress Task", help: "Definition TBD (Q8)" },
-      { id: "overdue", label: "Overdue Task", help: "Definition TBD (Q8)" },
-      { id: "completed", label: "Completed Task", help: "Definition TBD (Q8)" },
+      // Help tooltips (AC2) are not in the signed-off frame: logged as gap C13.
+      { id: "total", label: "Total Task" },
+      { id: "pending", label: "Pending Task" },
+      { id: "inProgress", label: "In-progress Task" },
+      { id: "overdue", label: "Overdue Task" },
+      { id: "completed", label: "Completed Task" },
+    ],
+    tools: [
+      { id: "lock", label: "Lock insights", icon: <Lock />, pendingReason: "Not yet defined (Q13)" },
+      { id: "settings", label: "Configure insights", icon: <Settings />, pendingReason: "Not yet defined (Q13)" },
     ],
   },
-  search: { label: "Search tasks", placeholder: "Search tasks…" },
+  search: { label: "Search tasks", placeholder: "Search..." },
   // I1 AC3 (approved with exception E3 / C11): Activity Type + Status.
   filters: [
     { id: "activityType", label: "Activity Type", options: [{ value: "Task", label: "Task" }, { value: "Follow-up", label: "Follow-up" }] },
@@ -165,7 +173,7 @@ export const tasksConfig: ActivityWorkspaceConfig = {
     { value: "medium", label: "Medium", badge: "warning" },
     { value: "low", label: "Low", badge: "neutral" },
   ],
-  descriptionClamp: 80,
+  descriptionClamp: 140,
   labels: {
     actions: "Task actions",
     edit: "Edit",

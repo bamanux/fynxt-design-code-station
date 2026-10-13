@@ -1,6 +1,6 @@
 /* Spec: fds-101-components.md § Tabs (FDS-101 75:18 primary, 318:5979 secondary). */
 .fx-tabs__list { display: flex; gap: var(--fx-spacing-1); overflow-x: auto; }
-.fx-tabs--primary .fx-tabs__list { border-block-end: var(--fx-border-width-thin) solid var(--fx-border-default); gap: 0; }
+.fx-tabs--primary .fx-tabs__list { gap: 0; }
 
 .fx-tabs__tab {
   display: inline-flex;

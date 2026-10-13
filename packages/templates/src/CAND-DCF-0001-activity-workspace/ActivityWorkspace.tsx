@@ -16,15 +16,31 @@ import {
   Spinner,
   StatCard,
   Tabs,
+  Tooltip,
   TopNav,
   type ActivityCardDetail,
   type MenuItem,
 } from "@fynxt/ui";
-import { Bell, Briefcase, ChevronDown, ChevronUp, Globe, Inbox, ListFilter, MessageSquare, MoreVertical, Plus, Search, Settings, User, X } from "lucide-react";
+import { Bell, Briefcase, ChevronDown, ChevronUp, Filter, Globe, Inbox, MessageSquare, MoreVertical, Plus, Search, Settings, User, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { CommentsPanel } from "./CommentsPanel";
 import { associationKey, FormDialog, type FormValues } from "./FormDialog";
-import type { ActivityInput, ActivityRecord, ActivityWorkspaceConfig, Association, Option, ShellConfig } from "./types";
+import type { ActivityInput, ActivityRecord, ActivityWorkspaceConfig, Association, Option, ShellConfig, ToolAction } from "./types";
+
+/** Renders a ToolAction; without onSelect it looks identical but is inactive and explains why. */
+function Tool({ tool, size }: { tool: ToolAction; size: "xs" | "sm" }) {
+  const button = (
+    <IconButton
+      variant={tool.variant ?? "ghost"}
+      size={size}
+      label={tool.label}
+      icon={tool.icon}
+      aria-disabled={tool.onSelect ? undefined : true}
+      onClick={tool.onSelect}
+    />
+  );
+  return tool.onSelect ? button : <Tooltip content={tool.pendingReason ?? "Not yet available"}>{button}</Tooltip>;
+}
 
 export interface ActivityWorkspaceProps {
   config: ActivityWorkspaceConfig;
@@ -57,7 +73,7 @@ function WorkspaceShell({ shell, children }: { shell: ShellConfig; children: Rea
           actions={
             <>
               <IconButton variant="ghost" size="sm" label="Settings" icon={<Settings />} />
-              <IconButton variant="ghost" size="sm" label="Notifications" icon={<Bell />} badge={shell.notifications} />
+              <IconButton variant="ghost" size="sm" label="Notifications" icon={<Bell />} badge={shell.notifications} badgeStatus="error" />
               {shell.language && (
                 <Button variant="secondary" size="s" leadingIcon={<Globe />} aria-label={`Language: ${shell.language}`}>
                   {shell.language}
@@ -124,6 +140,7 @@ function WorkspaceBody({ config }: { config: ActivityWorkspaceConfig }) {
 
   const userName = useCallback((id: string) => users.find((u) => u.value === id)?.label ?? id, [users]);
   const statusLabel = (v: string) => config.statuses.find((s) => s.value === v)?.label ?? v;
+  const statusBadge = (v: string) => config.statuses.find((s) => s.value === v)?.badge ?? "info";
   const filtersActive = Boolean(search) || Object.values(filters).some(Boolean);
 
   async function run(action: () => Promise<unknown>) {
@@ -197,45 +214,31 @@ function WorkspaceBody({ config }: { config: ActivityWorkspaceConfig }) {
         span: "half",
         value: (
           <>
+            {can("edit", r) && <IconButton size="xs" label={labels.addAssociation} icon={<Plus />} onClick={() => setDialog({ kind: "edit", record: r })} />}
             {r.associations.map((a) => (
               <EntityChip key={associationKey(a)} label={a.label} icon={<Briefcase />} />
             ))}
-            {can("edit", r) && <IconButton size="sm" label={labels.addAssociation} icon={<Plus />} onClick={() => setDialog({ kind: "edit", record: r })} />}
           </>
         ),
       },
-      { label: labels.assignedTo, span: "half", value: r.assignees.map((u) => <EntityChip key={u} label={userName(u)} icon={<User />} />) },
+      { label: labels.assignedTo, span: "half", align: "end", value: r.assignees.map((u) => <EntityChip key={u} label={userName(u)} icon={<User />} />) },
       {
+        // Approved frame shows a Badge; it also opens the status menu (AC13, decided 2026-10-13).
         label: labels.status,
-        span: "half",
         value: can("changeStatus", r) ? (
           <Menu
             label={labels.status}
             selectable
             align="start"
             items={config.statuses.map((s) => ({ id: s.value, label: s.label, selected: s.value === r.status, onSelect: () => void run(() => api.setStatus(r.id, s.value)) }))}
-            renderTrigger={(p) => <FilterChip {...p} label={statusLabel(r.status)} aria-label={`${labels.status}: ${statusLabel(r.status)}`} />}
+            renderTrigger={(p) => (
+              <button {...p} type="button" className="fx-aw-badge-trigger" aria-label={`${labels.status}: ${statusLabel(r.status)}`}>
+                <Badge status={statusBadge(r.status)}>{statusLabel(r.status)}</Badge>
+              </button>
+            )}
           />
         ) : (
-          <Badge status="info">{statusLabel(r.status)}</Badge>
-        ),
-      },
-      {
-        label: labels.reminder,
-        span: "half",
-        value: can("changeReminder", r) ? (
-          <Menu
-            label={labels.reminder}
-            selectable
-            align="start"
-            items={config.reminders.map((o) => ({ id: o.value, label: o.label, selected: o.value === r.reminder, onSelect: () => void run(() => api.setReminder(r.id, o.value)) }))}
-            renderTrigger={(p) => {
-              const current = config.reminders.find((o) => o.value === r.reminder)?.label ?? labels.noReminder;
-              return <FilterChip {...p} label={current} aria-label={`${labels.reminder}: ${current}`} />;
-            }}
-          />
-        ) : (
-          <span>{config.reminders.find((o) => o.value === r.reminder)?.label ?? labels.noReminder}</span>
+          <Badge status={statusBadge(r.status)}>{statusLabel(r.status)}</Badge>
         ),
       },
     ];
@@ -266,26 +269,23 @@ function WorkspaceBody({ config }: { config: ActivityWorkspaceConfig }) {
                 <Badge key={t} status="primary">{t}</Badge>
               ))}
               {r.scheduledAt && (
-                <Badge status="neutral">
-                  {labels.scheduledOn} {config.formatDateTime(r.scheduledAt)}
-                </Badge>
+                <span className="fx-aw-pill">
+                  <span className="fx-aw-pill__label">{labels.scheduledOn}</span> {config.formatDateTime(r.scheduledAt)}
+                </span>
               )}
               {priority && <Badge status={priority.badge}>{priority.label}</Badge>}
             </>
           }
           actions={
             menuItems.length > 0 && (
-              <Menu label={labels.actions} items={menuItems} renderTrigger={(p) => <IconButton {...p} size="sm" label={`${labels.actions}: ${r.title}`} icon={<MoreVertical />} />} />
+              <Menu label={labels.actions} items={menuItems} renderTrigger={(p) => <IconButton {...p} size="xs" label={`${labels.actions}: ${r.title}`} icon={<MoreVertical />} />} />
             )
           }
           details={details}
           footerStart={
             <>
               <span>
-                {labels.createdBy} <strong>{r.createdBy}</strong>
-              </span>
-              <span>
-                {labels.createdOn} <time dateTime={r.createdAt}>{config.formatDateTime(r.createdAt)}</time>
+                {labels.createdBy} <span className="fx-aw-strong">{r.createdBy}</span>
               </span>
             </>
           }
@@ -293,7 +293,7 @@ function WorkspaceBody({ config }: { config: ActivityWorkspaceConfig }) {
             <>
               <IconButton
                 variant="ghost"
-                size="sm"
+                size="xs"
                 label={labels.comments}
                 icon={<MessageSquare />}
                 badge={r.commentCount}
@@ -352,35 +352,41 @@ function WorkspaceBody({ config }: { config: ActivityWorkspaceConfig }) {
         <section className="fx-aw-insights" aria-labelledby="fx-aw-insights-title">
           <div className="fx-aw-insights__header">
             <h2 id="fx-aw-insights-title" className="fx-aw-insights__title">{config.insights.title}</h2>
+            <div className="fx-aw-tools">
+            {config.insights.tools?.map((t) => <Tool key={t.id} tool={t} size="xs" />)}
             <IconButton
               variant="ghost"
-              size="sm"
+              size="xs"
               label={insightsOpen ? labels.collapse : labels.expand}
               aria-expanded={insightsOpen}
               aria-controls="fx-aw-insights-metrics"
               icon={insightsOpen ? <ChevronUp /> : <ChevronDown />}
               onClick={() => setInsightsOpen((o) => !o)}
             />
+            </div>
           </div>
           <div id="fx-aw-insights-metrics" className="fx-aw-insights__metrics" hidden={!insightsOpen}>
             {config.insights.metrics.map((m) => (
-              <StatCard key={m.id} label={m.label} help={m.help} value={insights ? insights[m.id] ?? null : null} />
+              <StatCard key={m.id} density="compact" label={m.label} help={m.help} value={insights ? insights[m.id] ?? null : null} />
             ))}
           </div>
         </section>
       )}
       <div className="fx-aw-filters" role="search" aria-label={config.search.label}>
-        <div className="fx-aw-filters__chips">
+        <div className="fx-aw-filters__group">
           {remainingFilters.length > 0 ? (
             <Menu
               label={labels.addFilter}
               align="start"
               items={remainingFilters.map((f) => ({ id: f.id, label: f.label, onSelect: () => setExtraFilters((x) => [...x, f.id]) }))}
-              renderTrigger={(p) => <IconButton {...p} label={labels.addFilter} icon={<ListFilter />} />}
+              renderTrigger={(p) => <IconButton {...p} variant="ghost" label={labels.addFilter} icon={<Filter />} />}
             />
           ) : (
-            <IconButton label={labels.addFilter} icon={<ListFilter />} disabled />
+            <Tooltip content="No more filters available (Q14)">
+              <IconButton variant="ghost" label={labels.addFilter} icon={<Filter />} aria-disabled />
+            </Tooltip>
           )}
+          <span className="fx-aw-divider" aria-hidden="true" />
           {allFilters.map((f) => (
             <Menu
               key={f.id}
@@ -394,13 +400,12 @@ function WorkspaceBody({ config }: { config: ActivityWorkspaceConfig }) {
               renderTrigger={(p) => <FilterChip {...p} label={f.label} value={f.options.find((o) => o.value === filters[f.id])?.label} />}
             />
           ))}
-          {filtersActive && (
-            <Button variant="ghost" size="s" leadingIcon={<X />} onClick={clearAll}>
-              {states.clearAll}
-            </Button>
-          )}
+          <span className="fx-aw-divider" aria-hidden="true" />
+          <Button variant="ghost" size="s" leadingIcon={<X />} onClick={clearAll}>
+            {states.clearAll}
+          </Button>
         </div>
-        <SearchField label={config.search.label} placeholder={config.search.placeholder} value={search} onChange={setSearch} className="fx-aw-filters__search" />
+        <SearchField size="sm" label={config.search.label} placeholder={config.search.placeholder} value={search} onChange={setSearch} className="fx-aw-filters__search" />
       </div>
       {actionError && <Alert status="error" title={states.errorTitle}>{actionError}</Alert>}
       {collection}
@@ -420,12 +425,17 @@ function WorkspaceBody({ config }: { config: ActivityWorkspaceConfig }) {
               {config.primaryActionLabel}
             </Button>
           )}
-          {config.workspaceActions && config.workspaceActions.length > 0 && (
+          {config.headerTools?.map((t) => <Tool key={t.id} tool={t} size="sm" />)}
+          {config.workspaceActions && config.workspaceActions.length > 0 ? (
             <Menu
               label={labels.actions}
               items={config.workspaceActions.map((a) => ({ id: a.id, label: a.label, onSelect: a.onSelect }))}
-              renderTrigger={(p) => <IconButton {...p} label={labels.actions} icon={<MoreVertical />} />}
+              renderTrigger={(p) => <IconButton {...p} size="sm" label={labels.actions} icon={<MoreVertical />} />}
             />
+          ) : (
+            config.workspaceMenuPendingReason && (
+              <Tool tool={{ id: "workspace-menu", label: labels.actions, icon: <MoreVertical />, variant: "secondary", pendingReason: config.workspaceMenuPendingReason }} size="sm" />
+            )
           )}
         </div>
         <Tabs label={config.entity.plural} value={view} onChange={setView} items={config.views.map((v) => ({ id: v.id, label: v.label, content: v.id === view ? content : null }))} />

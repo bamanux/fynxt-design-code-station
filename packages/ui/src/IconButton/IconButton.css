@@ -20,6 +20,7 @@
 .fx-icon-btn__icon { display: inline-flex; inline-size: var(--fx-spacing-4); block-size: var(--fx-spacing-4); }
 .fx-icon-btn__icon > svg { inline-size: 100%; block-size: 100%; }
 
+.fx-icon-btn--xs { inline-size: var(--fx-spacing-6); block-size: var(--fx-spacing-6); } /* DCF-0001 approved frames use spacing/6 icon buttons; not an FDS-101 size (Q37) */
 .fx-icon-btn--sm { inline-size: var(--fx-spacing-8); block-size: var(--fx-spacing-8); }
 .fx-icon-btn--md { inline-size: calc(var(--fx-spacing-9)); block-size: calc(var(--fx-spacing-9)); }
 .fx-icon-btn--lg { inline-size: var(--fx-spacing-10); block-size: var(--fx-spacing-10); }
@@ -31,6 +32,8 @@
 .fx-icon-btn--outline { border-color: var(--fx-border-default); }
 .fx-icon-btn--outline:hover:not(:disabled),
 .fx-icon-btn--ghost:hover:not(:disabled) { background: var(--fx-color-neutral-50); }
+.fx-icon-btn--info { background: var(--fx-feedback-info-bg); border-color: var(--fx-border-focus); color: var(--fx-focus-ring); } /* DCF-0001 approved header lightbulb; not an FDS-101 variant (Q37) */
+.fx-icon-btn[aria-disabled="true"] { cursor: default; }
 .fx-icon-btn--destructive { background: var(--fx-status-destructive); color: var(--fx-text-on-primary); }
 
 .fx-icon-btn__dot {
@@ -50,7 +53,6 @@
   min-inline-size: var(--fx-spacing-4);
   padding-inline: var(--fx-spacing-1);
   border-radius: var(--fx-radius-full);
-  background: var(--fx-brand-primary);
   color: var(--fx-text-on-primary);
   font-family: var(--fx-typography-label-xxs-font-family);
   font-weight: var(--fx-typography-label-xxs-font-weight);
@@ -58,3 +60,5 @@
   line-height: var(--fx-spacing-4);
   text-align: center;
 }
+.fx-icon-btn__count--primary { background: var(--fx-brand-primary); }
+.fx-icon-btn__count--error { background: var(--fx-status-error); }

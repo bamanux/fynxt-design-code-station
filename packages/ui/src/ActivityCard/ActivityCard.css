@@ -3,6 +3,8 @@
 .fx-activity {
   display: flex;
   flex-direction: column;
+  gap: var(--fx-spacing-3);
+  padding: var(--fx-spacing-4) var(--fx-spacing-5);
   border: var(--fx-border-width-thin) solid var(--fx-border-default);
   border-radius: var(--fx-radius-lg);
   background: var(--fx-surface-card);
@@ -12,8 +14,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--fx-spacing-2) var(--fx-spacing-3);
-  padding: var(--fx-spacing-4) var(--fx-spacing-5);
+  gap: var(--fx-spacing-2);
 }
 .fx-activity__title {
   flex: 1 1 calc(var(--fx-spacing-12) * 6);
@@ -41,12 +42,13 @@
 .fx-activity__chevron { flex: none; inline-size: var(--fx-spacing-4); block-size: var(--fx-spacing-4); color: var(--fx-icon-color); }
 .fx-activity__meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fx-spacing-2); }
 .fx-activity__actions { display: inline-flex; }
-.fx-activity__body { display: flex; flex-direction: column; gap: var(--fx-spacing-3); padding: 0 var(--fx-spacing-5) var(--fx-spacing-4); }
+.fx-activity__body { display: flex; flex-direction: column; gap: var(--fx-spacing-3); }
 .fx-activity__body[hidden] { display: none; }
 .fx-activity__details { display: flex; flex-wrap: wrap; gap: var(--fx-spacing-3) var(--fx-spacing-6); margin: 0; padding-inline-start: var(--fx-spacing-6); }
 .fx-activity__row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fx-spacing-2); }
 .fx-activity__row--full { flex-basis: 100%; }
-.fx-activity__row--half { flex: 1 1 calc(var(--fx-spacing-12) * 6); }
+.fx-activity__row--half { flex: 0 1 auto; }
+.fx-activity__row--end { margin-inline-start: auto; }
 .fx-activity__term {
   color: var(--fx-text-muted-foreground);
   font-family: var(--fx-typography-body-xs-font-family);
@@ -71,10 +73,12 @@
   justify-content: space-between;
   gap: var(--fx-spacing-3);
   padding-block-start: var(--fx-spacing-3);
+  padding-inline-start: var(--fx-spacing-6);
   border-block-start: var(--fx-border-width-thin) solid var(--fx-border-default);
   color: var(--fx-text-muted-foreground);
   font-family: var(--fx-typography-body-xs-font-family);
   font-size: var(--fx-typography-body-xs-font-size);
+  line-height: var(--fx-typography-body-xs-line-height);
 }
 .fx-activity__footer-start,
 .fx-activity__footer-end { display: flex; align-items: center; gap: var(--fx-spacing-3); }

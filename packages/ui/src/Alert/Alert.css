@@ -4,7 +4,8 @@
   align-items: flex-start;
   gap: var(--fx-spacing-3);
   padding: calc(var(--fx-spacing-1) * 3.5) var(--fx-spacing-4);
-  border: var(--fx-border-width-thin) solid;
+  border: 0;
+  border-inline-start: 3px solid; /* OBSERVED: no token — DCF-0001, FDS-101 Alert 65:45 left accent is 3px */
   border-radius: var(--fx-radius-default);
   color: var(--fx-text-foreground);
   font-family: var(--fx-typography-body-sm-font-family);
@@ -14,6 +15,12 @@
 .fx-alert__icon { flex: none; inline-size: var(--fx-spacing-5); block-size: var(--fx-spacing-5); }
 .fx-alert__body { flex: 1; min-inline-size: 0; }
 .fx-alert__title { margin: 0; font-weight: var(--fx-font-weight-semibold); }
+.fx-alert__text {
+  color: var(--fx-text-muted-foreground);
+  font-family: var(--fx-typography-body-xs-font-family);
+  font-size: var(--fx-typography-body-xs-font-size);
+  line-height: var(--fx-typography-body-xs-line-height);
+}
 .fx-alert__text > :first-child { margin-block-start: 0; }
 .fx-alert__text > :last-child { margin-block-end: 0; }
 .fx-alert__action { flex: none; }

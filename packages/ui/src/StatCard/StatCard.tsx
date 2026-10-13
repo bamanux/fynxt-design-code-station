@@ -12,12 +12,14 @@ export interface StatCardProps {
   help?: string;
   /** Selected/pressed when used as a filter shortcut (live product shows a focus ring). */
   selected?: boolean;
+  /** Compact tile (DCF-0001 E2): padding spacing/2. */
+  density?: "default" | "compact";
 }
 
 /** FDS-101 Stat Card (node 359:54), compact form without the Delta badge. */
-export function StatCard({ label, value, caption, help, selected }: StatCardProps) {
+export function StatCard({ label, value, caption, help, selected, density = "default" }: StatCardProps) {
   return (
-    <div className="fx-stat" data-selected={selected || undefined}>
+    <div className={density === "compact" ? "fx-stat fx-stat--compact" : "fx-stat"} data-selected={selected || undefined}>
       <div className="fx-stat__label-row">
         <span className="fx-stat__label">{label}</span>
         {help && (

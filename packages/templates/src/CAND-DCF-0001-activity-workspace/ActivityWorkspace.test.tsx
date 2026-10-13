@@ -163,9 +163,12 @@ describe("ActivityWorkspace — filters and search (AC3)", () => {
     expect(cards()[0]).toHaveTextContent("Task: Alpha pricing");
   });
 
-  it("add-filter is shown but disabled when no extra filters are configured (Q14)", async () => {
+  it("add-filter is shown but inactive when no extra filters are configured (Q14)", async () => {
     render(<ActivityWorkspace config={makeConfig()} />);
-    expect(await screen.findByRole("button", { name: "Add filter" })).toBeDisabled();
+    const add = await screen.findByRole("button", { name: "Add filter" });
+    expect(add).toHaveAttribute("aria-disabled", "true");
+    await userEvent.click(add);
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
   });
 });
 
@@ -192,12 +195,30 @@ describe("ActivityWorkspace — cards (AC4, AC12, AC13, AC14)", () => {
     await waitFor(() => expect(metric("Completed Task")).toHaveTextContent("2"));
   });
 
-  it("reminder lead time is editable from the card", async () => {
+  it("matches the signed-off card: status badge opens the menu; no reminder or created-on row (C13)", async () => {
     render(<ActivityWorkspace config={makeConfig()} />);
     await waitFor(() => expect(cards()).toHaveLength(2));
-    await userEvent.click(within(cards()[0]!).getByRole("button", { name: "Reminder: No reminder" }));
-    await userEvent.click(screen.getByRole("menuitemradio", { name: "1 hour before" }));
-    await waitFor(() => expect(within(cards()[0]!).getByRole("button", { name: "Reminder: 1 hour before" })).toBeInTheDocument());
+    const card = cards()[0]!;
+    const status = within(card).getByRole("button", { name: "Status: In-progress" });
+    expect(within(status).getByText("In-progress")).toHaveClass("fx-badge");
+    expect(within(card).queryByText("Reminder:")).not.toBeInTheDocument();
+    expect(within(card).queryByText("Created on:")).not.toBeInTheDocument();
+  });
+
+  it("header and insights tools without an action render inactive with a reason", async () => {
+    const config = makeConfig();
+    config.headerTools = [{ id: "tips", label: "Tips", icon: <svg />, variant: "info", pendingReason: "Not yet defined (Q40)" }];
+    config.workspaceMenuPendingReason = "Not yet defined (Q9)";
+    config.insights = { ...config.insights!, tools: [{ id: "lock", label: "Lock insights", icon: <svg />, pendingReason: "Not yet defined (Q13)" }] };
+    render(<ActivityWorkspace config={config} />);
+    for (const [name, reason] of [["Tips", "Q40"], ["Task actions", "Q9"], ["Lock insights", "Q13"]] as const) {
+      const btn = screen.getByRole("button", { name });
+      expect(btn).toHaveAttribute("aria-disabled", "true");
+      await userEvent.hover(btn);
+      expect(screen.getByRole("tooltip")).toHaveTextContent(reason);
+      await userEvent.unhover(btn);
+    }
+    expect(screen.queryByRole("menu")).not.toBeInTheDocument();
   });
 
   it("kebab: Duplicate adds a copy, Mark as completed completes, Delete asks first", async () => {

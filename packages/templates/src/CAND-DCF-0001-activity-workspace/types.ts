@@ -1,4 +1,5 @@
 import type { BadgeStatus, SideNavItem } from "@fynxt/ui";
+import type { ReactNode } from "react";
 
 /**
  * Activity Workspace — DRAFT candidate template from DCF-0001 (CRM Tasks).
@@ -167,6 +168,19 @@ export interface ShellConfig {
   language?: string;
 }
 
+/**
+ * A header/panel tool button. Without `onSelect` it renders exactly as designed but inactive
+ * (aria-disabled + tooltip `pendingReason`), for controls whose behaviour is not yet defined.
+ */
+export interface ToolAction {
+  id: string;
+  label: string;
+  icon: ReactNode;
+  variant?: "secondary" | "ghost" | "info";
+  onSelect?: () => void;
+  pendingReason?: string;
+}
+
 export interface ActivityWorkspaceConfig {
   entity: { singular: string; plural: string };
   /** Optional application frame (DCF-0001 D2–D4 candidate App Shell). */
@@ -174,6 +188,10 @@ export interface ActivityWorkspaceConfig {
   /** List-scope tabs, e.g. My Task / My Team's Task (I1 AC1). */
   views: { id: string; label: string }[];
   primaryActionLabel: string;
+  /** Header tools after the primary action (approved frame: lightbulb). */
+  headerTools?: ToolAction[];
+  /** Shown as an inactive kebab when `workspaceActions` is empty and this is set (Q9). */
+  workspaceMenuPendingReason?: string;
   /** Workspace kebab items (I1 AC1). Items are TBD (Q9); the kebab only renders when provided. */
   workspaceActions?: { id: string; label: string; onSelect: () => void }[];
   /** Dismissible informational banner (I1 AC1). */
@@ -181,13 +199,16 @@ export interface ActivityWorkspaceConfig {
   insights?: {
     title: string;
     metrics: { id: string; label: string; help?: string }[];
+    /** Panel tools before the collapse toggle (approved frame: lock, settings — Q13). */
+    tools?: ToolAction[];
   };
   search: { label: string; placeholder: string };
   /** Filter chips; combined with AND by the adapter (I1 AC3). */
   filters: { id: string; label: string; options: Option[] }[];
   /** Filters offered by the add-filter control (Q14). Empty = control shown disabled. */
   additionalFilters?: { id: string; label: string; options: Option[] }[];
-  statuses: Option[];
+  /** Status options with the Badge colour used on cards (colour mapping is a design decision, Q6). */
+  statuses: (Option & { badge?: BadgeStatus })[];
   /** Status value set by "Mark as completed" (I1 AC12). */
   completedStatus: string;
   reminders: Option[];

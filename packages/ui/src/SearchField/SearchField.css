@@ -32,3 +32,5 @@
 .fx-search__clear { display: inline-flex; padding: 0; border: 0; background: none; color: var(--fx-icon-color); cursor: pointer; }
 .fx-search__clear > svg { inline-size: var(--fx-spacing-4); block-size: var(--fx-spacing-4); }
 .fx-search__clear:focus-visible { outline: var(--fx-border-width-thick) solid var(--fx-border-focus); }
+.fx-search--sm { block-size: var(--fx-spacing-8); background: var(--fx-surface-card); }
+.fx-search--sm .fx-search__icon { color: var(--fx-color-neutral-400); }

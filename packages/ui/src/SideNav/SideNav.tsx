@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useId, useState, type ReactNode } from "react";
 
 export interface SideNavItem {
@@ -93,7 +93,7 @@ export function SideNav({ items, activeId, collapsed, onCollapsedChange, logo, l
               <>
                 <span className="fx-sidenav__icon" aria-hidden="true">{item.icon}</span>
                 <span className="fx-sidenav__label">{item.label}</span>
-                {hasChildren && (isOpen ? <ChevronUp className="fx-sidenav__chevron" aria-hidden="true" /> : <ChevronDown className="fx-sidenav__chevron" aria-hidden="true" />)}
+                {hasChildren && (isOpen ? <ChevronDown className="fx-sidenav__chevron" aria-hidden="true" /> : <ChevronRight className="fx-sidenav__chevron" aria-hidden="true" />)}
               </>
             );
             return (

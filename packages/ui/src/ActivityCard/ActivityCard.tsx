@@ -7,6 +7,8 @@ export interface ActivityCardDetail {
   value: ReactNode;
   /** Layout hint: `full` takes its own row (description); `half` pairs with the next half item. */
   span?: "full" | "half";
+  /** Push to the end of its row (e.g. "Assigned to" in the approved frame). */
+  align?: "start" | "end";
 }
 
 export interface ActivityCardProps {
@@ -64,7 +66,7 @@ export function ActivityCard({
         {details.length > 0 && (
           <dl className="fx-activity__details">
             {details.map((d) => (
-              <div key={d.label} className={`fx-activity__row fx-activity__row--${d.span ?? "full"}`}>
+              <div key={d.label} className={`fx-activity__row fx-activity__row--${d.span ?? "full"}${d.align === "end" ? " fx-activity__row--end" : ""}`}>
                 <dt className="fx-activity__term">{d.label}:</dt>
                 <dd className="fx-activity__value">{d.value}</dd>
               </div>
