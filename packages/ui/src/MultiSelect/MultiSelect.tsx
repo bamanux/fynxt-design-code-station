@@ -22,6 +22,8 @@ export interface MultiSelectProps {
   disabled?: boolean;
   /** Text shown when the search matches nothing. */
   noResultsText?: string;
+  /** Leading icon in the box, e.g. a search icon (FDS-101 Search Multi-Select 57:87). */
+  leadingIcon?: ReactNode;
 }
 
 /**
@@ -39,6 +41,7 @@ export function MultiSelect({
   helperText,
   disabled,
   noResultsText = "No matches",
+  leadingIcon,
 }: MultiSelectProps) {
   const id = useId();
   const listId = `${id}-list`;
@@ -87,6 +90,7 @@ export function MultiSelect({
         {required && <span className="fx-field__required" aria-hidden="true">*</span>}
       </label>
       <div className="fx-multiselect__box" onClick={() => inputRef.current?.focus()}>
+        {leadingIcon && <span className="fx-multiselect__leading" aria-hidden="true">{leadingIcon}</span>}
         {selected.map((opt) => (
           <Chip key={opt.value} label={opt.label} leading={opt.leading} onRemove={disabled ? undefined : () => onChange(value.filter((v) => v !== opt.value))} />
         ))}

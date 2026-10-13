@@ -35,7 +35,19 @@
   padding-block: calc(var(--fx-spacing-1) * 2.5);
   resize: vertical;
 }
-.fx-field--select .fx-field__box { cursor: pointer; }
+.fx-field--select .fx-field__box { cursor: pointer; appearance: none; padding-inline-end: var(--fx-spacing-10); }
+.fx-field--select .fx-field__box[data-empty] { color: var(--fx-text-muted); }
+.fx-field__select { position: relative; display: block; }
+.fx-field__chevron {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-end: var(--fx-spacing-3);
+  inline-size: var(--fx-spacing-4);
+  block-size: var(--fx-spacing-4);
+  translate: 0 -50%;
+  color: var(--fx-icon-color);
+  pointer-events: none;
+}
 
 .fx-field__box:hover:not(:disabled):not(:read-only) { border-color: var(--fx-border-strong); }
 .fx-field--select .fx-field__box:hover:not(:disabled) { border-color: var(--fx-border-strong); }

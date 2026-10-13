@@ -1,3 +1,4 @@
+import { ChevronDown } from "lucide-react";
 import {
   forwardRef,
   useId,
@@ -131,26 +132,30 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
   const helperId = `${fieldId}-helper`;
   return (
     <FieldShell {...{ id: fieldId, helperId, label, helperText, status, required, hideLabel, disabled }} kind="select">
-      <select
-        ref={ref}
-        id={fieldId}
-        className={["fx-field__box", className].filter(Boolean).join(" ")}
-        required={required}
-        disabled={disabled}
-        {...a11yProps(helperId, helperText, status, rest["aria-describedby"])}
-        {...rest}
-      >
-        {placeholder !== undefined && (
-          <option value="" disabled>
-            {placeholder}
-          </option>
-        )}
-        {options.map((o) => (
-          <option key={o.value} value={o.value} disabled={o.disabled}>
-            {o.label}
-          </option>
-        ))}
-      </select>
+      <span className="fx-field__select">
+        <select
+          ref={ref}
+          id={fieldId}
+          className={["fx-field__box", className].filter(Boolean).join(" ")}
+          data-empty={rest.value === "" || undefined}
+          required={required}
+          disabled={disabled}
+          {...a11yProps(helperId, helperText, status, rest["aria-describedby"])}
+          {...rest}
+        >
+          {placeholder !== undefined && (
+            <option value="" disabled>
+              {placeholder}
+            </option>
+          )}
+          {options.map((o) => (
+            <option key={o.value} value={o.value} disabled={o.disabled}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="fx-field__chevron" aria-hidden="true" />
+      </span>
     </FieldShell>
   );
 });

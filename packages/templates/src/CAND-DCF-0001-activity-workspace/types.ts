@@ -126,6 +126,8 @@ export interface FormField {
   placeholder?: string;
   /** Half-width field (pairs with the next half field). */
   half?: boolean;
+  /** For associations: label of the button that reveals the record search (approved frame). */
+  addLabel?: string;
 }
 
 export interface FormConfig {

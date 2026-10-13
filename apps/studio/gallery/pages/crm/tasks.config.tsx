@@ -238,7 +238,7 @@ export const tasksConfig: ActivityWorkspaceConfig = {
       { name: "tags", label: "Tags", type: "tags", half: true, placeholder: "Select tags", options: ["Pricing", "Renewal", "Onboarding", "Legal"].map((t) => ({ value: t, label: t })) },
       // Rich text with @mentions is deferred (Q28); plain text until the editor is approved.
       { name: "description", label: "Description", type: "textarea", required: true, placeholder: "Describe the task" },
-      { name: "associations", label: "Associations", type: "associations", placeholder: "Search records…" },
+      { name: "associations", label: "Associations", type: "associations", placeholder: "Search records…", addLabel: "Add association" },
     ],
   },
   followUpForm: {

@@ -94,10 +94,12 @@
 .fx-aw-link:focus-visible { outline: var(--fx-border-width-thick) solid var(--fx-border-focus); }
 .fx-aw-followups { margin: 0; padding-inline-start: var(--fx-spacing-4); }
 
-.fx-aw-form { display: flex; flex-wrap: wrap; gap: var(--fx-spacing-4); }
+.fx-aw-form { display: flex; flex-wrap: wrap; gap: var(--fx-spacing-9) var(--fx-spacing-3); } /* row rhythm per approved P2 frame 14:1518 */
+.fx-aw-assoc { display: flex; flex-direction: column; gap: var(--fx-spacing-1); }
+.fx-aw-assoc__row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fx-spacing-2); }
 .fx-aw-form > .fx-alert,
 .fx-aw-form__field { flex: 1 1 100%; min-inline-size: 0; }
-.fx-aw-form__field--half { flex-basis: calc(50% - var(--fx-spacing-2)); }
+.fx-aw-form__field--half { flex-basis: calc(50% - var(--fx-spacing-3)); }
 
 .fx-aw-comments {
   display: flex;

@@ -1,4 +1,5 @@
-import { Alert, Button, Modal, MultiSelect, Select, TextArea, TextField } from "@fynxt/ui";
+import { Alert, Button, EntityChip, Modal, MultiSelect, Select, TextArea, TextField } from "@fynxt/ui";
+import { Briefcase, Plus, Search } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { Association, FormConfig, FormField, Option } from "./types";
 
@@ -46,6 +47,7 @@ export function FormDialog({ open, mode, config, initial, users, associable, onS
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [assocSearch, setAssocSearch] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const formId = `fx-aw-form-${mode}-${config.addTitle.replace(/\W+/g, "-").toLowerCase()}`;
 
@@ -54,6 +56,7 @@ export function FormDialog({ open, mode, config, initial, users, associable, onS
       setValues(initial);
       setErrors({});
       setSaveError(null);
+      setAssocSearch(false);
     }
     // Re-seed only when the dialog opens, not on every parent render.
   }, [open]);
@@ -97,11 +100,27 @@ export function FormDialog({ open, mode, config, initial, users, associable, onS
       case "select":
         return <Select {...common} value={str} placeholder={f.placeholder} options={f.options ?? []} onChange={(e) => set(f.name, e.target.value)} />;
       case "users":
-        return <MultiSelect {...common} options={users} value={arr} placeholder={f.placeholder} onChange={(next) => set(f.name, next)} />;
+        return <MultiSelect {...common} leadingIcon={<Search />} options={users} value={arr} placeholder={f.placeholder} onChange={(next) => set(f.name, next)} />;
       case "tags":
         return <MultiSelect {...common} options={f.options ?? []} value={arr} placeholder={f.placeholder} onChange={(next) => set(f.name, next)} />;
       case "associations":
-        return <MultiSelect {...common} options={assocOptions} value={arr} placeholder={f.placeholder} onChange={(next) => set(f.name, next)} />;
+        // Approved frame: "+ Add association" button; the record search appears on demand (AC10).
+        if (!assocSearch && f.addLabel)
+          return (
+            <div className="fx-aw-assoc">
+              <span className="fx-field__label">{f.label}</span>
+              <div className="fx-aw-assoc__row">
+                <Button variant="secondary" size="s" leadingIcon={<Plus />} onClick={() => setAssocSearch(true)}>
+                  {f.addLabel}
+                </Button>
+                {arr.map((key) => {
+                  const opt = assocOptions.find((o) => o.value === key);
+                  return opt ? <EntityChip key={key} label={opt.label} icon={<Briefcase />} onRemove={() => set(f.name, arr.filter((k) => k !== key))} /> : null;
+                })}
+              </div>
+            </div>
+          );
+        return <MultiSelect {...common} leadingIcon={<Search />} options={assocOptions} value={arr} placeholder={f.placeholder} onChange={(next) => set(f.name, next)} />;
       case "datetime":
         return <TextField {...common} type="datetime-local" value={str} onChange={(e) => set(f.name, e.target.value)} />;
       case "date":

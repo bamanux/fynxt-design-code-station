@@ -62,3 +62,5 @@
 .fx-multiselect__option[data-active] { background: var(--fx-surface-background); }
 .fx-multiselect__option[aria-selected="true"] { background: var(--fx-surface-selected); }
 .fx-multiselect__empty { color: var(--fx-text-muted-foreground); }
+.fx-multiselect__leading { display: inline-flex; color: var(--fx-icon-color); }
+.fx-multiselect__leading > svg { inline-size: var(--fx-spacing-4); block-size: var(--fx-spacing-4); }
