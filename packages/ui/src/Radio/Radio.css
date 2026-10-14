@@ -75,3 +75,19 @@
 }
 .fx-radio-group__options { display: flex; flex-direction: column; gap: var(--fx-spacing-3); }
 .fx-radio-group[data-orientation="horizontal"] .fx-radio-group__options { flex-direction: row; flex-wrap: wrap; gap: var(--fx-spacing-6); }
+
+/* appearance="card" (DCF-0003 S1a): bordered option cards; the selected card uses the brand border on surface/selected. */
+.fx-radio-group[data-appearance="card"] .fx-radio-group__options { gap: var(--fx-spacing-4); }
+.fx-radio-group[data-appearance="card"][data-orientation="horizontal"] .fx-radio-group__options > .fx-radio { flex: 1 1 0; }
+.fx-radio-group[data-appearance="card"] .fx-radio {
+  box-sizing: border-box;
+  padding: var(--fx-spacing-4);
+  border: var(--fx-border-width-thin) solid var(--fx-border-default);
+  border-radius: var(--fx-radius-lg);
+  background: var(--fx-surface-card);
+}
+.fx-radio-group[data-appearance="card"] .fx-radio:has(.fx-radio__input:checked) {
+  border: var(--fx-border-width-thick) solid var(--fx-brand-primary);
+  background: var(--fx-surface-selected);
+}
+.fx-radio-group[data-appearance="card"] .fx-radio:has(.fx-radio__input:focus-visible) { box-shadow: 0 0 0 var(--fx-border-width-thick) var(--fx-color-blue-500); }

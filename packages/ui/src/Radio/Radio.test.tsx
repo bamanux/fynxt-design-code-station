@@ -54,6 +54,10 @@ describe("RadioGroup", () => {
     await userEvent.keyboard("{ArrowDown}");
     expect(screen.getByRole("radio", { name: "IB" })).toBeChecked();
   });
+  it("renders the card appearance", () => {
+    render(<RadioGroup legend="Participant type" name="ptype" options={OPTIONS} appearance="card" orientation="horizontal" />);
+    expect(screen.getByRole("group", { name: /Participant type/ })).toHaveAttribute("data-appearance", "card");
+  });
   it("disables every option when the group is disabled", () => {
     render(<RadioGroup legend="Participant type" name="ptype" options={OPTIONS} disabled />);
     for (const r of screen.getAllByRole("radio")) expect(r).toBeDisabled();

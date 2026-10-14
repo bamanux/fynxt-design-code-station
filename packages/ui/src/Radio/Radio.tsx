@@ -67,13 +67,15 @@ export interface RadioGroupProps {
   required?: boolean;
   hideLegend?: boolean;
   disabled?: boolean;
+  /** "card": each option is a bordered, selectable card (DCF-0003 Step 1, approved frame S1a). */
+  appearance?: "default" | "card";
 }
 
 /** A labelled set of Radios in a fieldset. One tab stop; arrow keys move the selection. */
-export function RadioGroup({ legend, name, options, value, defaultValue, onChange, orientation = "vertical", required, hideLegend, disabled }: RadioGroupProps) {
+export function RadioGroup({ legend, name, options, value, defaultValue, onChange, orientation = "vertical", required, hideLegend, disabled, appearance = "default" }: RadioGroupProps) {
   const controlled = value !== undefined;
   return (
-    <fieldset className="fx-radio-group" data-orientation={orientation} disabled={disabled}>
+    <fieldset className="fx-radio-group" data-orientation={orientation} data-appearance={appearance} disabled={disabled}>
       <legend className={hideLegend ? "fx-radio-group__legend fx-visually-hidden" : "fx-radio-group__legend"}>
         {legend}
         {required && <span className="fx-field__required" aria-hidden="true">*</span>}
