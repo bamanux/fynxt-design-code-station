@@ -27,6 +27,11 @@ npm run dev                 # FDI Studio at http://127.0.0.1:5190
 Without an API key, Studio still works for requests, feedback and approvals. FDI runs wait
 until a key is set.
 
+**Signing in.** Locally, set `STUDIO_ADMINS=you@fynxt.com` in `.env` and sign in with that address
+(development sign-in, no password). Then use **Users & roles** to invite colleagues. For real use, set
+`STUDIO_AUTH_MODE=entra` with an Entra ID app registration (see `.env.example`); `npm start` refuses
+to run without it.
+
 | Command | Does |
 |---|---|
 | `npm run dev` | Sync tokens from the engine, start Studio (API + UI in one process) |
@@ -37,7 +42,12 @@ until a key is set.
 
 ## How FDI Studio works
 
-1. **Anyone** picks a name and role and submits a request (title, requirement, PRD/FRD/wireframes, links).
+0. **Access.** People sign in with their Microsoft 365 account, and only `@fynxt.com` addresses are accepted.
+   An **Admin** invites each person to the Station and gives them one or more roles (Users & roles).
+   Each case is visible only to its **members**: the creator, the owner and the people they invite (plus
+   Admins). Approve and run buttons appear only for the roles that own them.
+1. **Any signed-in user** submits a request (title, requirement, PRD/FRD/wireframes, links) and becomes
+   its creator and owner.
    Studio creates `design-cases/DCF-NNNN-…/inputs/` in the engine and starts `/fdi-intake`.
 2. FDI writes the Design Case File. Everyone can read it and **add feedback** (written to §11).
 3. The **gate owners** (from the engine's `agent/fdi/fdi.config.json`) approve or request changes. A
@@ -69,8 +79,11 @@ studio.permissions` (proposed in the engine's DL-0002).
 
 Nothing here should be exposed beyond localhost until these are done:
 
-- [ ] **Authentication:** replace local self-declared identity with SSO (identity and role from the IdP).
-      Local mode is not authentication.
+- [x] **Authentication:** Microsoft 365 sign-in (`STUDIO_AUTH_MODE=entra`), `@fynxt.com` only, with
+      Admin-managed users and roles. Still to do: an Entra ID app registration with the redirect URI
+      `<STUDIO_PUBLIC_URL>/api/auth/callback`, plus `ENTRA_*` and `STUDIO_SESSION_SECRET` from the secret store.
+- [ ] **User store:** `.studio-data/users.json` is a file on the Studio host. Back it up, or move it to a
+      database before running more than one Studio instance.
 - [ ] **Hosting:** deploy `npm start` behind HTTPS, with the engine repo checked out next to it (or
       mounted) and `ENGINE_PATH` set.
 - [ ] **Secrets:** `ANTHROPIC_API_KEY` from the host's secret store, never in the repo.
