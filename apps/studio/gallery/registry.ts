@@ -10,4 +10,6 @@ import type { ComponentType } from "react";
 export const pages: Record<string, () => Promise<{ default: ComponentType }>> = {
   // DCF-0001 (CODE-IN-PROGRESS): registered for review; menu entry added on publish.
   "crm.tickets-activities.tasks": () => import("./pages/crm/tasks.page"),
+  // DCF-0003 (CODE-IN-PROGRESS): registered for review; menu entry added on publish.
+  "crm.operations.incentive-programs": () => import("./pages/crm/incentive-programs.page"),
 };
