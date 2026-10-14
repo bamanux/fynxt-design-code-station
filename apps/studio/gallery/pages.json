@@ -1,0 +1,21 @@
+{
+  "$comment": "Pages registered for review in the Station gallery (one per entry in registry.ts). FDI adds an entry at /fdi-build; /fdi-publish moves the page into menu.json. Studio shows both, with the case's status and a 'Request a change' action.",
+  "pages": [
+    {
+      "id": "crm.tickets-activities.tasks",
+      "label": "Tasks",
+      "module": "CRM",
+      "section": "Tickets & Activities",
+      "caseId": "DCF-0001",
+      "template": "CAND-DCF-0001-activity-workspace"
+    },
+    {
+      "id": "crm.operations.incentive-programs",
+      "label": "Incentive Programs",
+      "module": "CRM",
+      "section": "Operations",
+      "caseId": "DCF-0003",
+      "template": "CAND-DCF-0003-incentive-programs"
+    }
+  ]
+}

@@ -190,6 +190,20 @@ svg { inline-size: var(--fx-spacing-4); block-size: var(--fx-spacing-4); flex: n
 .gallery__menu a { display: block; padding: var(--fx-spacing-1) var(--fx-spacing-2); border-radius: var(--fx-radius-default); text-decoration: none; }
 .gallery__menu a[aria-current="page"] { background: var(--fx-surface-selected); }
 .gallery__module { font-family: var(--fx-font-family-heading); font-weight: var(--fx-font-weight-semibold); margin-block-end: var(--fx-spacing-2); }
+.gallery__tag { margin-inline-start: var(--fx-spacing-2); padding: 0 var(--fx-spacing-1); border-radius: var(--fx-radius-sm); background: var(--fx-surface-background); color: var(--fx-text-muted-foreground); font-size: var(--fx-typography-body-xs-font-size); }
+.gallery__main { display: flex; flex-direction: column; gap: var(--fx-spacing-3); min-inline-size: 0; }
+.gallery__bar { display: flex; align-items: center; justify-content: space-between; gap: var(--fx-spacing-4); flex-wrap: wrap; inline-size: 100%; text-align: start; }
+.gallery__open { display: inline-flex; align-items: center; gap: var(--fx-spacing-1); }
+.gallery__open svg { inline-size: var(--fx-spacing-4); block-size: var(--fx-spacing-4); }
+.gallery__bar-info { display: flex; flex-direction: column; gap: var(--fx-spacing-1); min-inline-size: 0; }
+.gallery__bar-info p { margin: 0; }
+.gallery__bar-title { font-family: var(--fx-typography-heading-base-font-family); font-weight: var(--fx-typography-heading-base-font-weight); font-size: var(--fx-typography-heading-base-font-size); }
+.gallery__bar-meta { display: flex; align-items: center; gap: var(--fx-spacing-3); flex-wrap: wrap; }
+.handoff { display: flex; flex-direction: column; gap: var(--fx-spacing-2); padding: var(--fx-spacing-3); border: var(--fx-border-width-thin) solid var(--fx-border-default); border-inline-start: var(--fx-border-width-thick) solid var(--fx-status-warning); border-radius: var(--fx-radius-default); background: var(--fx-surface-background); }
+.handoff p { margin: 0; }
+.handoff__title { font-weight: var(--fx-typography-body-sm-medium-font-weight); }
+.handoff__cmd { display: flex; align-items: center; gap: var(--fx-spacing-2); }
+.handoff__cmd code { flex: 1; padding: var(--fx-spacing-1) var(--fx-spacing-2); border-radius: var(--fx-radius-default); background: var(--fx-surface-card); border: var(--fx-border-width-thin) solid var(--fx-border-default); }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 1100px) { /* OBSERVED: no token — FDS-101 defines no breakpoint tokens (gap D11) */

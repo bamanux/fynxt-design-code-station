@@ -1,7 +1,8 @@
 import { existsSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import type { GalleryModule, LibraryComponent, LibraryPayload, LibraryTemplate, TokenEntry } from "../shared/types";
+import type { GalleryEntry, GalleryModule, LibraryComponent, LibraryPayload, LibraryTemplate, TokenEntry } from "../shared/types";
+import { listCases } from "./cases";
 import { env } from "./env";
 
 type TokenNode = { $value?: unknown; $type?: string; $extensions?: { "com.fynxt"?: { modes?: Record<string, unknown> } } } & Record<string, unknown>;
@@ -86,7 +87,35 @@ async function gallery(): Promise<GalleryModule[]> {
   return menu.modules;
 }
 
+interface RegisteredPage {
+  id: string;
+  label: string;
+  module: string;
+  section: string;
+  caseId: string | null;
+  template: string | null;
+}
+
+/** Pages registered for review (written by FDI at /fdi-build, next to registry.ts). */
+async function registeredPages(): Promise<RegisteredPage[]> {
+  const file = resolve(env.stationRoot, "apps/studio/gallery/pages.json");
+  if (!existsSync(file)) return [];
+  return (JSON.parse(await readFile(file, "utf8")) as { pages: RegisteredPage[] }).pages ?? [];
+}
+
+/** Published pages (menu.json) plus registered ones, each with its case's current status. */
+export async function galleryEntries(menu?: GalleryModule[]): Promise<GalleryEntry[]> {
+  const [modules, registered, cases] = await Promise.all([menu ? Promise.resolve(menu) : gallery(), registeredPages(), listCases()]);
+  const statusOf = (caseId: string | null) => (caseId ? cases.find((c) => c.id === caseId)?.status ?? null : null);
+  const entries = new Map<string, GalleryEntry>();
+  for (const m of modules)
+    for (const s of m.sections)
+      for (const p of s.pages) entries.set(p.id, { id: p.id, label: p.label, module: m.label, section: s.label, caseId: p.caseId, caseStatus: statusOf(p.caseId), template: p.template, published: true });
+  for (const p of registered) if (!entries.has(p.id)) entries.set(p.id, { ...p, caseStatus: statusOf(p.caseId), published: false });
+  return [...entries.values()];
+}
+
 export async function library(): Promise<LibraryPayload> {
   const [t, c, tp, g] = await Promise.all([tokens(), components(), templates(), gallery()]);
-  return { tokens: t, components: c, templates: tp, gallery: g };
+  return { tokens: t, components: c, templates: tp, gallery: g, galleryEntries: await galleryEntries(g) };
 }

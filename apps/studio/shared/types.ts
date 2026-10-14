@@ -43,6 +43,8 @@ export interface CaseSummary {
   openQuestions: number;
   figmaUrl: string | null;
   prUrl: string | null;
+  /** Set when the case was raised from a gallery page as a change to it. */
+  changeOf: ChangeOf | null;
   activeRun: RunSummary | null;
   waitingOn: { roles: string[]; text: string };
 }
@@ -135,6 +137,26 @@ export interface LibraryTemplate {
   description: string;
 }
 
+/** The gallery page (and the case that built it) a change request refers to. */
+export interface ChangeOf {
+  pageId: string;
+  pageLabel: string;
+  caseId: string | null;
+  template: string | null;
+}
+
+/** A page Studio can show: published (menu.json) or registered for review (pages.json). */
+export interface GalleryEntry {
+  id: string;
+  label: string;
+  module: string;
+  section: string;
+  caseId: string | null;
+  caseStatus: CaseStatus | null;
+  template: string | null;
+  published: boolean;
+}
+
 export interface GalleryPage {
   id: string;
   label: string;
@@ -157,6 +179,8 @@ export interface LibraryPayload {
   components: LibraryComponent[];
   templates: LibraryTemplate[];
   gallery: GalleryModule[];
+  /** Published and in-review pages with their case status (Gallery menu and page header). */
+  galleryEntries: GalleryEntry[];
 }
 
 export interface StudioMeta {

@@ -1,5 +1,5 @@
 import { Alert, Badge, Button, Card, Select, Tabs, TextArea } from "@fynxt/ui";
-import { ArrowLeft, Download, ExternalLink, Play, Square } from "lucide-react";
+import { ArrowLeft, Copy, Download, ExternalLink, Play, Square } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
 import type { CaseAction, CaseDetail } from "../../shared/types";
 import { Markdown } from "../components/Markdown";
@@ -92,6 +92,18 @@ function ActionPanel({ detail, onChange, reload }: { detail: CaseDetail; onChang
         {detail.waitingOn.text}
         {detail.waitingOn.roles.length > 0 && <span className="muted"> — {detail.waitingOn.roles.join(" or ")}</span>}
       </p>
+      {detail.changeOf && (
+        <p className="muted">
+          Change to{" "}
+          <Link href={`/gallery/${detail.changeOf.pageId}`}>{detail.changeOf.pageLabel}</Link>
+          {detail.changeOf.caseId && (
+            <>
+              {" "}(built in <Link href={`/cases/${detail.changeOf.caseId}`}>{detail.changeOf.caseId}</Link>)
+            </>
+          )}
+        </p>
+      )}
+      {(detail.status === "APPROVED" || detail.status === "DESIGN-CHANGES-REQUESTED") && !detail.activeRun && <FigmaHandoff id={detail.id} />}
       {decisions.length > 0 && <div className="stack">{decisions.map((a) => <Decision key={a.to} id={detail.id} action={a} onDone={onChange} />)}</div>}
       {runs.map((a) => (
         <div key={a.stage} className="stack">
@@ -111,12 +123,46 @@ function ActionPanel({ detail, onChange, reload }: { detail: CaseDetail; onChang
           {detail.figmaUrl && (
             <li><a href={detail.figmaUrl} target="_blank" rel="noreferrer">Open Figma design <ExternalLink aria-hidden="true" /></a></li>
           )}
-          {detail.prUrl && (
-            <li><a href={detail.prUrl} target="_blank" rel="noreferrer">Open pull request <ExternalLink aria-hidden="true" /></a></li>
-          )}
+          {detail.prUrl &&
+            (/^https?:\/\//.test(detail.prUrl) ? (
+              <li><a href={detail.prUrl} target="_blank" rel="noreferrer">Open pull request <ExternalLink aria-hidden="true" /></a></li>
+            ) : (
+              <li className="muted">Code review: {detail.prUrl}</li>
+            ))}
         </ul>
       )}
     </Card>
+  );
+}
+
+/**
+ * The Figma stage needs the interactive Figma connector, so it can't run from Studio. The Product
+ * Designer runs one command in Claude Code; the case then comes back here at DESIGN-REVIEW.
+ */
+function FigmaHandoff({ id }: { id: string }) {
+  const command = `/fdi-figma ${id}`;
+  const [copied, setCopied] = useState(false);
+  return (
+    <div className="handoff" role="note" aria-label="Design update needed">
+      <p className="handoff__title">Design update needed</p>
+      <p className="muted">The Product Designer runs this in Claude Code (Figma needs their sign-in). When it finishes, the case returns here for design review.</p>
+      <div className="handoff__cmd">
+        <code>{command}</code>
+        <Button
+          variant="secondary"
+          size="s"
+          leadingIcon={<Copy />}
+          onClick={() =>
+            navigator.clipboard?.writeText(command).then(
+              () => setCopied(true),
+              () => setCopied(false)
+            )
+          }
+        >
+          {copied ? "Copied" : "Copy"}
+        </Button>
+      </div>
+    </div>
   );
 }
 

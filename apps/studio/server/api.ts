@@ -1,18 +1,24 @@
 import { createReadStream } from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { CaseStatus, RunStage, StudioMeta } from "../shared/types";
+import type { CaseStatus, ChangeOf, RunStage, StudioMeta } from "../shared/types";
 import { addFeedback, caseDir, CASE_ID, createRequest, decide, getCase, inputFile, listCases, UPLOAD_LIMITS } from "./cases";
 import { env, fdiConfig } from "./env";
 import { HttpError } from "./errors";
 import { readForm, readJson, sendJson, userFrom } from "./http";
-import { library } from "./library";
+import { galleryEntries, library } from "./library";
 import { canRun, canSubmit, headlessBlocker, stageFor } from "./permissions";
 import { agentProblem, cancelRun, startRun, subscribe } from "./runs";
 
-function promptFor(stage: RunStage, id: string, folder: string, title: string, requestedBy: string): string {
+function changeNote(change: (ChangeOf & { caseFolder: string | null }) | undefined): string {
+  if (!change) return "";
+  const source = change.caseId ? ` It was built in ${change.caseId}${change.caseFolder ? ` (design-cases/${change.caseFolder}/case-file.md)` : ""}${change.template ? ` with template ${change.template}` : ""}.` : "";
+  return ` This is a CHANGE REQUEST for the existing gallery page "${change.pageLabel}" (${change.pageId}).${source} Read that case file first: reuse its approved decisions, components and template, and classify the change against them (usually REUSE / EXTEND of what already exists). Record the source case as an input.`;
+}
+
+function promptFor(stage: RunStage, id: string, folder: string, title: string, requestedBy: string, change?: ChangeOf & { caseFolder: string | null }): string {
   switch (stage) {
     case "intake":
-      return `/fdi-intake ${title} -- Use the existing case folder design-cases/${folder} (ID ${id}) created by FDI Studio. The requester's text is in inputs/request.md; any other files in inputs/ are attachments. Requested by ${requestedBy}.`;
+      return `/fdi-intake ${title} -- Use the existing case folder design-cases/${folder} (ID ${id}) created by FDI Studio. The requester's text is in inputs/request.md; any other files in inputs/ are attachments. Requested by ${requestedBy}.${changeNote(change)}`;
     case "revise":
       return `/fdi-revise ${id}`;
     case "figma":
@@ -65,11 +71,20 @@ async function route(req: IncomingMessage, res: ServerResponse, path: string): P
             return { name: f.name, data: Buffer.from(await f.arrayBuffer()) };
           })
         );
-        const created = await createRequest({ title, module, description, links, files }, user);
+        // A change raised from a gallery page: trust only a page id Studio knows, and take its case from there.
+        const pageId = String(form.get("changeOfPage") ?? "").trim();
+        let changeOf: (ChangeOf & { caseFolder: string | null }) | undefined;
+        if (pageId) {
+          const entry = (await galleryEntries()).find((e) => e.id === pageId);
+          if (!entry) throw new HttpError(400, "That gallery page isn't registered in the Station.");
+          const caseFolder = entry.caseId ? await caseDir(entry.caseId).then((c) => c.folder, () => null) : null;
+          changeOf = { pageId: entry.id, pageLabel: entry.label, caseId: entry.caseId, template: entry.template, caseFolder };
+        }
+        const created = await createRequest({ title, module, description, links, files, changeOf }, user);
         const requestedBy = `${user.name} (${user.role})`;
         let runError: string | null = null;
         try {
-          await startRun({ caseId: created.id, caseDir: created.dir, stage: "intake", user, prompt: promptFor("intake", created.id, created.folder, title, requestedBy) });
+          await startRun({ caseId: created.id, caseDir: created.dir, stage: "intake", user, prompt: promptFor("intake", created.id, created.folder, title, requestedBy, changeOf) });
         } catch (error) {
           runError = error instanceof Error ? error.message : String(error);
         }

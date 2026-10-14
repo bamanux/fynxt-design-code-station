@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
-import type { CaseDetail, CaseStatus, CaseSummary, FeedbackItem, HistoryItem, InputFile, StudioUser } from "../shared/types";
+import type { CaseDetail, CaseStatus, CaseSummary, ChangeOf, FeedbackItem, HistoryItem, InputFile, StudioUser } from "../shared/types";
 import { CASE_STATUSES } from "../shared/types";
 import { env } from "./env";
 import { HttpError } from "./errors";
@@ -26,6 +26,7 @@ interface RequestMeta {
   requestedBy: string;
   createdAt: string;
   links: string[];
+  changeOf?: ChangeOf;
 }
 
 // Per-case write serialisation so two reviewers can't interleave edits to one file.
@@ -87,14 +88,15 @@ async function readCase(id: string, folder: string): Promise<{ summary: CaseSumm
   const dir = join(casesRoot(), folder);
   const file = join(dir, "case-file.md");
   const activeRun = activeRunFor(id);
+  const meta = JSON.parse(await readFile(join(dir, "request.json"), "utf8").catch(() => "{}")) as Partial<RequestMeta>;
+  const changeOf = meta.changeOf ?? null;
   if (!existsSync(file)) {
-    const meta = JSON.parse(await readFile(join(dir, "request.json"), "utf8").catch(() => "{}")) as Partial<RequestMeta>;
     return {
       md: null,
       summary: {
         id, folder, title: meta.title ?? folder, module: meta.module ?? "", status: "NEW", revision: 0, owner: "",
         requestedBy: meta.requestedBy ?? "", created: meta.createdAt?.slice(0, 10) ?? "", updated: meta.createdAt?.slice(0, 10) ?? "",
-        openFeedback: 0, openQuestions: 0, figmaUrl: null, prUrl: null, activeRun,
+        openFeedback: 0, openQuestions: 0, figmaUrl: null, prUrl: null, changeOf, activeRun,
         waitingOn: activeRun ? waitingOn("NEW") : { roles: [], text: "Waiting for FDI intake to start" },
       },
     };
@@ -119,6 +121,7 @@ async function readCase(id: string, folder: string): Promise<{ summary: CaseSumm
       openQuestions: openQuestions(md).filter((r) => !(r[4] ?? "").trim()).length,
       figmaUrl: fileKey ? `https://www.figma.com/design/${fileKey}${node ? `?node-id=${node.replace(":", "-")}` : ""}` : null,
       prUrl: nested(fm.station, "pr"),
+      changeOf,
       activeRun,
       waitingOn: waitingOn(asStatus(str(fm.status))),
     },
@@ -165,6 +168,8 @@ export interface NewRequest {
   description: string;
   links: string[];
   files: { name: string; data: Buffer }[];
+  /** Raised from a gallery page: the page and the case that built it. */
+  changeOf?: ChangeOf & { caseFolder: string | null };
 }
 
 /** Creates `design-cases/DCF-NNNN-<slug>/` with inputs. FDI intake then writes case-file.md. */
@@ -195,6 +200,16 @@ export async function createRequest(req: NewRequest, user: StudioUser): Promise<
       "## Requirement",
       "",
       req.description,
+      ...(req.changeOf
+        ? [
+            "",
+            "## Change to an existing page",
+            "",
+            `- **Gallery page:** ${req.changeOf.pageLabel} (\`${req.changeOf.pageId}\`)`,
+            `- **Built in:** ${req.changeOf.caseId ? `${req.changeOf.caseId}${req.changeOf.caseFolder ? ` (design-cases/${req.changeOf.caseFolder}/case-file.md)` : ""}` : "—"}`,
+            `- **Template:** ${req.changeOf.template ?? "—"}`,
+          ]
+        : []),
       ...(req.links.length ? ["", "## Links", "", ...req.links.map((l) => `- ${l}`)] : []),
       ...(req.files.length ? ["", "## Attachments", "", ...req.files.map((f) => `- inputs/${safeFileName(f.name)}`)] : []),
       "",
@@ -207,7 +222,8 @@ export async function createRequest(req: NewRequest, user: StudioUser): Promise<
       used.add(name);
       await writeFile(join(inputs, name), file.data);
     }
-    const meta: RequestMeta = { id, title: req.title, module: req.module, requestedBy, createdAt: new Date().toISOString(), links: req.links };
+    const changeOf = req.changeOf ? { pageId: req.changeOf.pageId, pageLabel: req.changeOf.pageLabel, caseId: req.changeOf.caseId, template: req.changeOf.template } : undefined;
+    const meta: RequestMeta = { id, title: req.title, module: req.module, requestedBy, createdAt: new Date().toISOString(), links: req.links, ...(changeOf ? { changeOf } : {}) };
     await writeFile(join(dir, "request.json"), JSON.stringify(meta, null, 2));
     return { id, dir, folder };
   }
