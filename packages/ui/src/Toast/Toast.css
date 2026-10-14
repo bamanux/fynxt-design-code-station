@@ -1,0 +1,28 @@
+/* FDS-101 Toast. */
+.fx-toast {
+  display: flex;
+  align-items: center;
+  gap: var(--fx-spacing-3);
+  max-inline-size: calc(var(--fx-spacing-12) * 10);
+  padding: var(--fx-spacing-3) var(--fx-spacing-4);
+  background: var(--fx-surface-card);
+  border: var(--fx-border-width-thin) solid var(--fx-border-default);
+  border-radius: var(--fx-radius-lg);
+  box-shadow: var(--fx-shadow-lg);
+}
+.fx-toast__icon { flex: none; inline-size: var(--fx-spacing-5); block-size: var(--fx-spacing-5); }
+.fx-toast--info .fx-toast__icon { color: var(--fx-status-info); }
+.fx-toast--success .fx-toast__icon { color: var(--fx-status-success); }
+.fx-toast--warning .fx-toast__icon { color: var(--fx-status-warning); }
+.fx-toast--error .fx-toast__icon { color: var(--fx-status-error); }
+.fx-toast__text {
+  flex: 1;
+  margin: 0;
+  color: var(--fx-text-foreground);
+  font-family: var(--fx-typography-body-sm-font-family);
+  font-size: var(--fx-typography-body-sm-font-size);
+  line-height: var(--fx-typography-body-sm-line-height);
+}
+.fx-toast__close { display: inline-flex; padding: var(--fx-spacing-1); border: 0; border-radius: var(--fx-radius-default); background: none; color: var(--fx-text-muted-foreground); cursor: pointer; }
+.fx-toast__close svg { inline-size: var(--fx-spacing-4); block-size: var(--fx-spacing-4); }
+.fx-toast__close:hover { background: var(--fx-surface-background); }

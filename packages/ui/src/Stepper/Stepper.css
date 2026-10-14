@@ -1,0 +1,34 @@
+/* Stepper — DCF-0002 candidate Stepper Step 43:6900 (DCF-0003 D1). */
+.fx-stepper { display: flex; align-items: center; flex-wrap: wrap; gap: var(--fx-spacing-3); margin: 0; padding: 0; list-style: none; }
+.fx-stepper__step { display: flex; align-items: center; gap: var(--fx-spacing-3); }
+.fx-stepper__step:not(:last-child)::after {
+  content: "";
+  inline-size: var(--fx-spacing-10);
+  block-size: var(--fx-border-width-thin);
+  background: var(--fx-border-default);
+}
+.fx-stepper__marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--fx-spacing-8);
+  block-size: var(--fx-spacing-8);
+  border-radius: var(--fx-radius-full);
+  background: var(--fx-surface-background);
+  color: var(--fx-text-muted-foreground);
+  font-family: var(--fx-typography-body-sm-medium-font-family);
+  font-weight: var(--fx-typography-body-sm-medium-font-weight);
+  font-size: var(--fx-typography-body-sm-medium-font-size);
+}
+.fx-stepper__step[data-state="active"] .fx-stepper__marker,
+.fx-stepper__step[data-state="completed"] .fx-stepper__marker { background: var(--fx-brand-primary); color: var(--fx-text-on-primary); }
+.fx-stepper__check { inline-size: var(--fx-spacing-4); block-size: var(--fx-spacing-4); }
+.fx-stepper__label {
+  color: var(--fx-text-muted-foreground);
+  font-family: var(--fx-typography-body-sm-medium-font-family);
+  font-weight: var(--fx-typography-body-sm-medium-font-weight);
+  font-size: var(--fx-typography-body-sm-medium-font-size);
+  line-height: var(--fx-typography-body-sm-medium-line-height);
+}
+.fx-stepper__step[data-state="completed"] .fx-stepper__label { color: var(--fx-text-foreground); }
+.fx-stepper__step[data-state="active"] .fx-stepper__label { color: var(--fx-brand-primary); }

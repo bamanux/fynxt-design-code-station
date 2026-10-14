@@ -1,0 +1,17 @@
+/* FDS-101 Breadcrumb 73:14. */
+.fx-breadcrumb__list { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fx-spacing-1); margin: 0; padding: 0; list-style: none; }
+.fx-breadcrumb__item { display: inline-flex; align-items: center; gap: var(--fx-spacing-1); }
+.fx-breadcrumb__link,
+.fx-breadcrumb__text,
+.fx-breadcrumb__current {
+  font-family: var(--fx-typography-body-xs-font-family);
+  font-size: var(--fx-typography-body-xs-font-size);
+  line-height: var(--fx-typography-body-xs-line-height);
+}
+.fx-breadcrumb__link,
+.fx-breadcrumb__text { color: var(--fx-text-muted-foreground); }
+.fx-breadcrumb__link { padding: 0; border: 0; background: none; cursor: pointer; text-decoration: none; }
+.fx-breadcrumb__link:hover { color: var(--fx-text-foreground); text-decoration: underline; }
+.fx-breadcrumb__link:focus-visible { outline: var(--fx-border-width-thick) solid var(--fx-color-blue-500); border-radius: var(--fx-radius-sm); }
+.fx-breadcrumb__current { color: var(--fx-text-foreground); }
+.fx-breadcrumb__sep { inline-size: var(--fx-spacing-3); block-size: var(--fx-spacing-3); color: var(--fx-text-muted); }

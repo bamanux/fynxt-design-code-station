@@ -1,0 +1,40 @@
+/* FDS-101 Checkbox 54:104, Size=M. */
+.fx-checkbox { position: relative; display: inline-flex; align-items: flex-start; gap: var(--fx-spacing-2); cursor: pointer; }
+.fx-checkbox[data-disabled] { cursor: not-allowed; }
+.fx-checkbox__input { position: absolute; inline-size: var(--fx-spacing-4); block-size: var(--fx-spacing-4); margin: 0; opacity: 0; }
+.fx-checkbox__box {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  inline-size: var(--fx-spacing-4);
+  block-size: var(--fx-spacing-4);
+  margin-block-start: var(--fx-spacing-xs);
+  border: var(--fx-border-width-thin) solid var(--fx-border-strong);
+  border-radius: var(--fx-radius-sm);
+  background: var(--fx-surface-card);
+  color: var(--fx-text-on-primary);
+}
+.fx-checkbox__mark { inline-size: var(--fx-spacing-3); block-size: var(--fx-spacing-3); visibility: hidden; }
+.fx-checkbox__input:checked + .fx-checkbox__box,
+.fx-checkbox__input:indeterminate + .fx-checkbox__box { background: var(--fx-brand-primary); border-color: var(--fx-brand-primary); }
+.fx-checkbox__input:checked + .fx-checkbox__box .fx-checkbox__mark,
+.fx-checkbox__input:indeterminate + .fx-checkbox__box .fx-checkbox__mark { visibility: visible; }
+.fx-checkbox__input:focus-visible + .fx-checkbox__box { box-shadow: 0 0 0 var(--fx-border-width-thick) var(--fx-color-blue-500); }
+.fx-checkbox__input:disabled + .fx-checkbox__box { background: var(--fx-surface-background); border-color: var(--fx-border-default); }
+.fx-checkbox__input:disabled:checked + .fx-checkbox__box { background: var(--fx-text-muted); border-color: var(--fx-text-muted); }
+.fx-checkbox__text { display: flex; flex-direction: column; gap: var(--fx-spacing-1); }
+.fx-checkbox__label {
+  color: var(--fx-text-foreground);
+  font-family: var(--fx-typography-body-sm-font-family);
+  font-size: var(--fx-typography-body-sm-font-size);
+  line-height: var(--fx-typography-body-sm-line-height);
+}
+.fx-checkbox[data-disabled] .fx-checkbox__label { color: var(--fx-text-muted); }
+.fx-checkbox__description {
+  color: var(--fx-text-muted-foreground);
+  font-family: var(--fx-typography-body-xs-font-family);
+  font-size: var(--fx-typography-body-xs-font-size);
+  line-height: var(--fx-typography-body-xs-line-height);
+}

@@ -1,0 +1,35 @@
+/* DataTable — FDS-101 Data Table Header / Cell (DCF-0002 D12 candidates now in FDS-101). */
+.fx-table { overflow-x: auto; border: var(--fx-border-width-thin) solid var(--fx-border-default); border-radius: var(--fx-radius-lg); background: var(--fx-surface-card); }
+.fx-table__table { inline-size: 100%; border-collapse: collapse; table-layout: fixed; }
+.fx-table__th {
+  block-size: var(--fx-spacing-11);
+  padding-inline: var(--fx-spacing-4);
+  background: var(--fx-surface-background);
+  border-block-end: var(--fx-border-width-thin) solid var(--fx-border-default);
+  color: var(--fx-text-muted-foreground);
+  font-family: var(--fx-typography-table-header-font-family);
+  font-weight: var(--fx-typography-table-header-font-weight);
+  font-size: var(--fx-typography-table-header-font-size);
+  line-height: var(--fx-typography-table-header-line-height);
+  letter-spacing: var(--fx-typography-table-header-letter-spacing);
+  text-transform: uppercase;
+  text-align: start;
+}
+.fx-table__td {
+  block-size: var(--fx-spacing-11);
+  padding: var(--fx-spacing-2) var(--fx-spacing-4);
+  border-block-end: var(--fx-border-width-thin) solid var(--fx-border-default);
+  color: var(--fx-text-foreground);
+  font-family: var(--fx-typography-table-cell-value-font-family);
+  font-size: var(--fx-typography-table-cell-value-font-size);
+  line-height: var(--fx-typography-table-cell-value-line-height);
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fx-table__th + .fx-table__th,
+.fx-table__td + .fx-table__td { border-inline-start: var(--fx-border-width-thin) solid var(--fx-border-default); }
+.fx-table tbody tr:last-child .fx-table__td { border-block-end: 0; }
+.fx-table__th[data-align="end"], .fx-table__td[data-align="end"] { text-align: end; }
+.fx-table__th[data-align="center"], .fx-table__td[data-align="center"] { text-align: center; }
+.fx-table__empty { padding: 0; }
