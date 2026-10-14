@@ -45,8 +45,13 @@ until a key is set.
 4. Figma generation runs in Claude Code (`/fdi-figma`) for now, because the Figma write connector needs
    interactive sign-in. Design and code reviews are then decided in Studio, and **build**/**publish**
    run from Studio.
-5. Published pages appear in **Gallery**. **Library** shows the live tokens, components (with demos)
-   and template registry.
+5. **Gallery** shows pages in review (`apps/studio/gallery/pages.json`) and published pages
+   (`menu.json`), with each page's case and status. **Request a change** on a page opens a new case
+   linked to that page and its source case, and FDI takes it through the same steps. **Open full page**
+   shows the page at full width. **Library** shows the live tokens, components (with demos) and
+   template registry.
+6. When a case needs a Figma update, its page shows the exact `/fdi-figma DCF-NNNN` command for the
+   Product Designer to run in Claude Code; the case then comes back to Studio for design review.
 
 Default roles: Product Designer, UI Code Reviewer, Product Manager, Project Manager, Business Analyst,
 Developer, QA / Tester, Stakeholder. Who can decide or run what is configured in `fdi.config.json →
