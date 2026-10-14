@@ -1,9 +1,4 @@
-import type { CaseDetail, CaseStatus, CaseSummary, LibraryPayload, RunEvent, RunSummary, StudioMeta, StudioUser } from "../../shared/types";
-
-let currentUser: StudioUser | null = null;
-export function setApiUser(user: StudioUser | null) {
-  currentUser = user;
-}
+import type { CaseDetail, CaseStatus, CaseSummary, LibraryPayload, PagePin, RunEvent, RunSummary, StationUser, StudioMeta, StudioUser } from "../../shared/types";
 
 export class ApiError extends Error {
   constructor(
@@ -14,11 +9,9 @@ export class ApiError extends Error {
   }
 }
 
+/** Identity is the session cookie set at sign-in. This header marks Studio's own calls (CSRF guard on the server). */
 function headers(extra?: Record<string, string>): Record<string, string> {
-  return {
-    ...(currentUser ? { "X-FDI-User": encodeURIComponent(currentUser.name), "X-FDI-Role": encodeURIComponent(currentUser.role) } : {}),
-    ...extra,
-  };
+  return { "X-Requested-With": "fdi-studio", ...extra };
 }
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -28,10 +21,21 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   return body as T;
 }
 
-const json = (body: unknown): RequestInit => ({ method: "POST", body: JSON.stringify(body), headers: { "Content-Type": "application/json" } });
+const json = (body: unknown, method = "POST"): RequestInit => ({ method, body: JSON.stringify(body), headers: { "Content-Type": "application/json" } });
 
 export const api = {
   meta: () => request<StudioMeta>("/api/meta"),
+  me: () => request<StudioUser>("/api/me"),
+  devSignIn: (email: string) => request<StudioUser>("/api/auth/dev", json({ email })),
+  signOut: () => request<{ ok: boolean }>("/api/auth/logout", { method: "POST" }),
+  users: () => request<StationUser[]>("/api/users"),
+  inviteUser: (body: { email: string; name: string; roles: string[]; isAdmin: boolean }) => request<StationUser>("/api/users", json(body)),
+  updateUser: (email: string, patch: Partial<Pick<StationUser, "name" | "roles" | "isAdmin" | "active">>) => request<StationUser>(`/api/users/${encodeURIComponent(email)}`, json(patch, "PATCH")),
+  addMember: (id: string, email: string) => request<CaseDetail>(`/api/cases/${id}/members`, json({ email })),
+  removeMember: (id: string, email: string) => request<CaseDetail>(`/api/cases/${id}/members`, json({ email }, "DELETE")),
+  setOwner: (id: string, email: string) => request<CaseDetail>(`/api/cases/${id}/members/owner`, json({ email })),
+  pins: (pageId: string) => request<PagePin[]>(`/api/pages/${encodeURIComponent(pageId)}/pins`),
+  addPin: (pageId: string, body: { x: number; y: number; text: string; hint: string }) => request<PagePin>(`/api/pages/${encodeURIComponent(pageId)}/pins`, json(body)),
   cases: () => request<CaseSummary[]>("/api/cases"),
   case: (id: string) => request<CaseDetail>(`/api/cases/${id}`),
   createCase: (form: FormData) => request<{ id: string; runError: string | null }>("/api/cases", { method: "POST", body: form }),
@@ -43,7 +47,7 @@ export const api = {
   inputUrl: (id: string, name: string) => `/api/cases/${id}/inputs/${encodeURIComponent(name)}`,
 };
 
-/** Streams run events over SSE using fetch (EventSource can't send identity headers). */
+/** Streams run events over SSE using fetch (keeps the Studio header on the request). */
 export function streamRun(runId: string, onEvent: (e: RunEvent) => void, onEnd: () => void): () => void {
   const controller = new AbortController();
   void (async () => {

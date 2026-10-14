@@ -7,3 +7,4 @@ studio.mcp.json
 *.log
 .DS_Store
 coverage/
+.studio-data/

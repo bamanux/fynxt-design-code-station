@@ -1,11 +1,13 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { StudioMeta, StudioUser } from "../../shared/types";
-import { api, setApiUser } from "./api";
+import { api, ApiError } from "./api";
 import { load, save } from "./storage";
 
 interface Session {
-  user: StudioUser | null;
-  setUser: (u: StudioUser | null) => void;
+  /** The signed-in Station user; null when signed out; undefined while checking. */
+  user: StudioUser | null | undefined;
+  refresh: () => Promise<void>;
+  signOut: () => Promise<void>;
   meta: StudioMeta | null;
   metaError: string | null;
   theme: "light" | "dark";
@@ -15,33 +17,36 @@ interface Session {
 const SessionContext = createContext<Session | null>(null);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
-  const [user, setUserState] = useState<StudioUser | null>(() => load<StudioUser | null>("fdi.studio.user", null));
+  const [user, setUser] = useState<StudioUser | null | undefined>(undefined);
   const [meta, setMeta] = useState<StudioMeta | null>(null);
   const [metaError, setMetaError] = useState<string | null>(null);
   const [theme, setThemeState] = useState<"light" | "dark">(() => load("fdi.studio.theme", "light"));
 
-  setApiUser(user);
+  const refresh = useCallback(async () => {
+    try {
+      setUser(await api.me());
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 401) setUser(null);
+      else throw e;
+    }
+  }, []);
 
   useEffect(() => {
     api.meta().then(setMeta, (e: Error) => setMetaError(e.message));
-  }, []);
+    refresh().catch((e: Error) => setMetaError(e.message));
+  }, [refresh]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
 
-  // Drop a stored identity whose role no longer exists in governance config.
-  useEffect(() => {
-    if (meta && user && !meta.roles.includes(user.role)) setUserState(null);
-  }, [meta, user]);
-
   const value = useMemo<Session>(
     () => ({
       user,
-      setUser: (u) => {
-        save("fdi.studio.user", u);
-        setApiUser(u);
-        setUserState(u);
+      refresh,
+      signOut: async () => {
+        await api.signOut().catch(() => undefined);
+        setUser(null);
       },
       meta,
       metaError,
@@ -51,7 +56,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         setThemeState(t);
       },
     }),
-    [user, meta, metaError, theme]
+    [user, refresh, meta, metaError, theme]
   );
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }
@@ -60,4 +65,11 @@ export function useSession(): Session {
   const ctx = useContext(SessionContext);
   if (!ctx) throw new Error("useSession outside SessionProvider");
   return ctx;
+}
+
+/** For pages that only render once signed in (App guards this). */
+export function useUser(): StudioUser {
+  const { user } = useSession();
+  if (!user) throw new Error("useUser while signed out");
+  return user;
 }

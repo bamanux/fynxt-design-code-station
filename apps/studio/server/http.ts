@@ -1,8 +1,9 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { Readable } from "node:stream";
 import type { StudioUser } from "../shared/types";
-import { fdiConfig } from "./env";
 import { HttpError } from "./errors";
+import { sessionEmail } from "./session";
+import { activeUser } from "./users";
 
 export function sendJson(res: ServerResponse, status: number, body: unknown) {
   res.writeHead(status, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
@@ -39,15 +40,22 @@ export async function readForm(req: IncomingMessage, maxBytes: number): Promise<
   return request.formData();
 }
 
+const WRITE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
 /**
- * Local mode identity: the browser declares name + role in headers. This is a convenience for
- * a trusted local network only — it is NOT authentication. Replace with SSO before going live.
+ * CSRF guard. Session cookies are SameSite=Lax, and every state-changing call must also carry this header,
+ * which a cross-site form or link cannot set.
  */
-export function userFrom(req: IncomingMessage): StudioUser {
-  const rawName = req.headers["x-fdi-user"];
-  const rawRole = req.headers["x-fdi-role"];
-  const name = typeof rawName === "string" ? decodeURIComponent(rawName).replace(/[^\p{L}\p{N} .'-]/gu, "").trim().slice(0, 60) : "";
-  const role = typeof rawRole === "string" ? decodeURIComponent(rawRole) : "";
-  if (!name || !fdiConfig().studio.roles.includes(role)) throw new HttpError(401, "Choose your name and role first.");
-  return { name, role };
+export function assertSameOriginWrite(req: IncomingMessage): void {
+  if (WRITE_METHODS.has(req.method ?? "GET") && req.headers["x-requested-with"] !== "fdi-studio") {
+    throw new HttpError(403, "Request blocked: missing Studio header.");
+  }
+}
+
+/** The signed-in Station user, from the session cookie. Throws 401 when signed out, deactivated or no longer invited. */
+export async function currentUser(req: IncomingMessage): Promise<StudioUser> {
+  const email = sessionEmail(req);
+  const user = email ? await activeUser(email) : null;
+  if (!user) throw new HttpError(401, "Sign in to FDI Studio.");
+  return user;
 }

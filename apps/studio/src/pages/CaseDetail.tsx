@@ -1,7 +1,7 @@
 import { Alert, Badge, Button, Card, Select, Tabs, TextArea } from "@fynxt/ui";
 import { ArrowLeft, Copy, Download, ExternalLink, Play, Square } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
-import type { CaseAction, CaseDetail } from "../../shared/types";
+import type { CaseAction, CaseDetail, DesignAsset, StationUser } from "../../shared/types";
 import { Markdown } from "../components/Markdown";
 import { EmptyState, PageHeader } from "../components/PageHeader";
 import { RunLog } from "../components/RunLog";
@@ -237,6 +237,12 @@ export function CaseDetailPage({ id }: { id: string }) {
       ),
     },
     {
+      id: "design",
+      label: "Design",
+      adornment: detail.design.length ? <Badge>{detail.design.length}</Badge> : undefined,
+      content: <DesignTab detail={detail} />,
+    },
+    {
       id: "feedback",
       label: "Feedback",
       adornment: detail.openFeedback ? <Badge status="warning">{detail.openFeedback}</Badge> : undefined,
@@ -301,9 +307,128 @@ export function CaseDetailPage({ id }: { id: string }) {
       )}
       <div className="detail-layout">
         <CaseTabs tabs={tabs} />
-        <ActionPanel detail={detail} onChange={state.setData} reload={state.reload} />
+        <div className="stack">
+          <ActionPanel detail={detail} onChange={state.setData} reload={state.reload} />
+          <MembersPanel detail={detail} onChange={state.setData} />
+        </div>
       </div>
     </>
+  );
+}
+
+function DesignGroup({ title, assets }: { title: string; assets: DesignAsset[] }) {
+  if (!assets.length) return null;
+  return (
+    <section className="stack" aria-label={title}>
+      <h3 className="fx-typo-heading-base">{title}</h3>
+      <div className="design-grid">
+        {assets.map((a) => (
+          <figure key={a.url}>
+            <a href={a.url} target="_blank" rel="noreferrer">
+              <img src={a.url} alt={a.name.replace(/\.png$/, "").replace(/[-_]/g, " ")} loading="lazy" />
+            </a>
+            <figcaption>{a.name}</figcaption>
+          </figure>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/** The case's UI design: approved Figma frames, screenshots of the built page, and the live page. No Figma account needed. */
+function DesignTab({ detail }: { detail: CaseDetail }) {
+  const design = detail.design.filter((a) => a.group === "design");
+  const build = detail.design.filter((a) => a.group === "build");
+  return (
+    <div className="stack">
+      <ul className="link-list">
+        {detail.builtPageId && (
+          <li>
+            <Link href={`/gallery/${detail.builtPageId}`}>Open the built page in Gallery</Link> — pin comments on it to request UI changes
+          </li>
+        )}
+        {detail.figmaUrl && (
+          <li>
+            <a href={detail.figmaUrl} target="_blank" rel="noreferrer">Open in Figma <ExternalLink aria-hidden="true" /></a> (needs access to the FDI work file)
+          </li>
+        )}
+      </ul>
+      {detail.design.length === 0 ? (
+        <EmptyState title="No design yet">Approved frames appear here after FDI builds the Figma design and saves its screenshots in the case folder.</EmptyState>
+      ) : (
+        <>
+          <DesignGroup title="Approved design (Figma frames)" assets={design} />
+          <DesignGroup title="Built page (code screenshots)" assets={build} />
+        </>
+      )}
+    </div>
+  );
+}
+
+/** Who can see and work on this case. The creator, owner or an Admin invites Station users. */
+function MembersPanel({ detail, onChange }: { detail: CaseDetail; onChange: (c: CaseDetail) => void }) {
+  const users = useAsync<StationUser[]>(() => (detail.canManageMembers ? api.users() : Promise.resolve([])), [detail.canManageMembers]);
+  const [pick, setPick] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const memberEmails = new Set(detail.members.map((m) => m.email));
+  const candidates = (users.data ?? []).filter((u) => u.active && !memberEmails.has(u.email));
+
+  async function act(fn: () => Promise<CaseDetail>) {
+    setError(null);
+    try {
+      onChange(await fn());
+      setPick("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  return (
+    <Card as="section" aria-labelledby="members" className="action-panel">
+      <h2 id="members" className="fx-typo-heading-base">Members</h2>
+      {detail.members.length === 0 ? (
+        <p className="muted">No members yet. Only Admins can see this case until someone is invited.</p>
+      ) : (
+        <ul className="member-list">
+          {detail.members.map((m) => (
+            <li key={m.email}>
+              <span className="stack-tight">
+                <span>
+                  {m.name} {m.isOwner && <Badge status="primary">Owner</Badge>} {m.isCreator && !m.isOwner && <Badge>Creator</Badge>}
+                </span>
+                <span className="muted">{m.roles.length ? m.roles.join(", ") : m.email}</span>
+              </span>
+              {detail.canManageMembers && !m.isOwner && (
+                <span className="row-gap">
+                  <Button variant="ghost" size="s" onClick={() => void act(() => api.setOwner(detail.id, m.email))}>Make owner</Button>
+                  {!m.isCreator && (
+                    <Button variant="ghost" size="s" aria-label={`Remove ${m.name}`} onClick={() => void act(() => api.removeMember(detail.id, m.email))}>
+                      Remove
+                    </Button>
+                  )}
+                </span>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      {detail.canManageMembers && (
+        <div className="stack">
+          <Select
+            label="Invite a Station user"
+            placeholder={users.loading ? "Loading…" : candidates.length ? "Choose a person" : "Everyone is already a member"}
+            options={candidates.map((u) => ({ value: u.email, label: `${u.name} — ${u.roles.join(", ") || "no role"}` }))}
+            value={pick}
+            onChange={(e) => setPick(e.target.value)}
+            disabled={!candidates.length}
+          />
+          <Button variant="secondary" disabled={!pick} onClick={() => void act(() => api.addMember(detail.id, pick))}>
+            Invite to case
+          </Button>
+        </div>
+      )}
+      {error && <Alert status="error">{error}</Alert>}
+    </Card>
   );
 }
 

@@ -228,3 +228,24 @@ svg { inline-size: var(--fx-spacing-4); block-size: var(--fx-spacing-4); flex: n
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* Users & roles, members */
+.row-gap { display: inline-flex; align-items: center; gap: var(--fx-spacing-2); flex-wrap: wrap; }
+.stack-tight { display: flex; flex-direction: column; gap: var(--fx-spacing-1); }
+.role-picker { margin: 0; padding: 0; border: 0; gap: var(--fx-spacing-2); }
+.member-list { display: flex; flex-direction: column; gap: var(--fx-spacing-2); margin: 0; padding: 0; list-style: none; }
+.member-list li { display: flex; align-items: center; justify-content: space-between; gap: var(--fx-spacing-2); }
+/* Design tab */
+.design-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(calc(var(--fx-spacing-12) * 6), 1fr)); gap: var(--fx-spacing-4); }
+.design-grid figure { margin: 0; display: flex; flex-direction: column; gap: var(--fx-spacing-2); }
+.design-grid img { inline-size: 100%; block-size: auto; border: var(--fx-border-width-thin) solid var(--fx-border-default); border-radius: var(--fx-radius-default); background: var(--fx-surface-card); }
+.design-grid figcaption { color: var(--fx-text-muted-foreground); font-size: var(--fx-typography-body-xs-font-size); }
+
+/* Pinned comments on built pages */
+.pin-canvas { position: relative; }
+.pin-overlay { position: absolute; inset: 0; z-index: 30; cursor: crosshair; background: var(--fx-surface-selected); opacity: 0.25; }
+.pin { position: absolute; z-index: 31; display: inline-flex; align-items: center; justify-content: center; inline-size: var(--fx-spacing-6); block-size: var(--fx-spacing-6); margin: calc(var(--fx-spacing-3) * -1) 0 0 calc(var(--fx-spacing-3) * -1); border-radius: var(--fx-radius-full); background: var(--fx-brand-primary); color: var(--fx-text-on-primary); font-size: var(--fx-typography-body-xs-font-size); box-shadow: var(--fx-shadow-md); }
+.pin--draft { background: var(--fx-status-warning); }
+.pin-popover { position: absolute; z-index: 32; inline-size: calc(var(--fx-spacing-12) * 8); margin-block-start: var(--fx-spacing-4); }
+.pin-form { box-shadow: var(--fx-shadow-lg); }
+.pin-list { display: flex; flex-direction: column; gap: var(--fx-spacing-2); margin: 0; padding-inline-start: var(--fx-spacing-5); }

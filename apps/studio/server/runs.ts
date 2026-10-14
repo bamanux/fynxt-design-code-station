@@ -3,6 +3,7 @@ import { appendFile, mkdir, readdir, readFile, writeFile } from "node:fs/promise
 import { existsSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import type { RunEvent, RunStage, RunSummary, StudioUser } from "../shared/types";
+import { userLabel } from "../shared/types";
 import { env, fdiConfig } from "./env";
 
 interface ActiveRun {
@@ -132,7 +133,7 @@ export async function startRun({ caseId, caseDir, stage, prompt, user }: StartRu
     caseId,
     stage,
     state: "running",
-    startedBy: `${user.name} (${user.role})`,
+    startedBy: userLabel(user),
     startedAt,
     finishedAt: null,
     costUsd: null,

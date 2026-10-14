@@ -2,7 +2,8 @@ import { existsSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import type { GalleryEntry, GalleryModule, LibraryComponent, LibraryPayload, LibraryTemplate, TokenEntry } from "../shared/types";
-import { listCases } from "./cases";
+import { allCaseSummaries } from "./cases";
+import { menuModules, registeredPages } from "./pages";
 import { env } from "./env";
 
 type TokenNode = { $value?: unknown; $type?: string; $extensions?: { "com.fynxt"?: { modes?: Record<string, unknown> } } } & Record<string, unknown>;
@@ -82,30 +83,11 @@ async function templates(): Promise<LibraryTemplate[]> {
   }));
 }
 
-async function gallery(): Promise<GalleryModule[]> {
-  const menu = JSON.parse(await readFile(resolve(env.stationRoot, "apps/studio/gallery/menu.json"), "utf8")) as { modules: GalleryModule[] };
-  return menu.modules;
-}
-
-interface RegisteredPage {
-  id: string;
-  label: string;
-  module: string;
-  section: string;
-  caseId: string | null;
-  template: string | null;
-}
-
-/** Pages registered for review (written by FDI at /fdi-build, next to registry.ts). */
-async function registeredPages(): Promise<RegisteredPage[]> {
-  const file = resolve(env.stationRoot, "apps/studio/gallery/pages.json");
-  if (!existsSync(file)) return [];
-  return (JSON.parse(await readFile(file, "utf8")) as { pages: RegisteredPage[] }).pages ?? [];
-}
+const gallery = menuModules;
 
 /** Published pages (menu.json) plus registered ones, each with its case's current status. */
 export async function galleryEntries(menu?: GalleryModule[]): Promise<GalleryEntry[]> {
-  const [modules, registered, cases] = await Promise.all([menu ? Promise.resolve(menu) : gallery(), registeredPages(), listCases()]);
+  const [modules, registered, cases] = await Promise.all([menu ? Promise.resolve(menu) : gallery(), registeredPages(), allCaseSummaries()]);
   const statusOf = (caseId: string | null) => (caseId ? cases.find((c) => c.id === caseId)?.status ?? null : null);
   const entries = new Map<string, GalleryEntry>();
   for (const m of modules)

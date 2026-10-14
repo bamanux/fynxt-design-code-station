@@ -1,7 +1,7 @@
-import { Alert, Badge, Button, Card, Modal } from "@fynxt/ui";
-import { ExternalLink, MessageSquarePlus } from "lucide-react";
-import { lazy, Suspense, useMemo, useState } from "react";
-import type { GalleryEntry } from "../../shared/types";
+import { Alert, Badge, Button, Card, Modal, TextArea } from "@fynxt/ui";
+import { ExternalLink, MessageSquarePlus, MousePointerClick, X } from "lucide-react";
+import { lazy, Suspense, useMemo, useRef, useState, type MouseEvent } from "react";
+import type { GalleryEntry, PagePin } from "../../shared/types";
 import { pages } from "../../gallery/registry";
 import { EmptyState, PageHeader } from "../components/PageHeader";
 import { RequestForm } from "../components/RequestForm";
@@ -90,15 +90,17 @@ export function GalleryPage({ pageId }: { pageId: string | null }) {
                 </div>
               </Card>
             )}
-            <Card className="gallery__stage">
-              {Page ? (
+            {entry && Page ? (
+              <PinnedPage entry={entry}>
                 <Suspense fallback={<p className="muted">Loading page…</p>}>
                   <Page />
                 </Suspense>
-              ) : (
+              </PinnedPage>
+            ) : (
+              <Card className="gallery__stage">
                 <EmptyState title={pageId ? "This page isn't registered in the Station" : "Choose a page"} />
-              )}
-            </Card>
+              </Card>
+            )}
           </div>
         </div>
       )}
@@ -128,5 +130,115 @@ export function GalleryPage({ pageId }: { pageId: string | null }) {
         </Modal>
       )}
     </>
+  );
+}
+
+type Draft = { x: number; y: number; hint: string } | null;
+
+/** What was under the pointer: the nearest button, link, label or heading text. */
+function hintAt(x: number, y: number): string {
+  const el = document.elementFromPoint(x, y);
+  const target = el?.closest("button, a, label, h1, h2, h3, th, td, legend, [role=tab]") ?? el;
+  return (target?.textContent ?? "").replace(/\s+/g, " ").trim().slice(0, 80);
+}
+
+/**
+ * The built page with pinned comments. In Comment mode a click drops a pin; each pin becomes §11 feedback on the
+ * page's case, so the Product Designer can send it through case file → Figma → code.
+ */
+function PinnedPage({ entry, children }: { entry: GalleryEntry; children: React.ReactNode }) {
+  const pins = useAsync(() => (entry.caseId ? api.pins(entry.id) : Promise.resolve([] as PagePin[])), [entry.id]);
+  const [commenting, setCommenting] = useState(false);
+  const [draft, setDraft] = useState<Draft>(null);
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState<string | null>(null);
+  const canvas = useRef<HTMLDivElement>(null);
+  const overlay = useRef<HTMLDivElement>(null);
+
+  function place(e: MouseEvent<HTMLDivElement>) {
+    const box = canvas.current!.getBoundingClientRect();
+    // Look through the overlay to find what the person pointed at.
+    overlay.current!.style.pointerEvents = "none";
+    const hint = hintAt(e.clientX, e.clientY);
+    overlay.current!.style.pointerEvents = "";
+    setDraft({ x: ((e.clientX - box.left) / box.width) * 100, y: ((e.clientY - box.top) / box.height) * 100, hint });
+    setText("");
+    setError(null);
+  }
+
+  async function send() {
+    if (!draft || !text.trim()) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const pin = await api.addPin(entry.id, { ...draft, text });
+      pins.setData([...(pins.data ?? []), pin]);
+      setSent(`Comment ${pin.id} was added to case ${pin.caseId} as feedback ${pin.feedbackRef}.`);
+      setDraft(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const form = draft && (
+    <Card as="section" aria-label="New comment" className="pin-form">
+      <p className="muted">{draft.hint ? `On “${draft.hint}”` : "General comment on this page"}</p>
+      <TextArea label="What should change?" rows={3} autoFocus value={text} onChange={(e) => setText(e.target.value)} />
+      {error && <Alert status="error">{error}</Alert>}
+      <div className="row-end">
+        <Button variant="ghost" onClick={() => setDraft(null)}>Cancel</Button>
+        <Button loading={busy} disabled={!text.trim()} onClick={() => void send()}>Send comment</Button>
+      </div>
+    </Card>
+  );
+
+  return (
+    <div className="stack">
+      {entry.caseId && (
+        <div className="row-between">
+          <p className="muted">{commenting ? "Click anywhere on the page to pin a comment. The page is paused while commenting." : `${pins.data?.length ?? 0} comment(s) on this page.`}</p>
+          <span className="row-gap">
+            <Button variant="ghost" size="s" onClick={() => setDraft({ x: 0, y: 0, hint: "" })}>Comment without pinning</Button>
+            <Button variant={commenting ? "primary" : "secondary"} size="s" leadingIcon={commenting ? <X /> : <MousePointerClick />} aria-pressed={commenting} onClick={() => { setCommenting(!commenting); setDraft(null); }}>
+              {commenting ? "Done commenting" : "Comment"}
+            </Button>
+          </span>
+        </div>
+      )}
+      {sent && <Alert status="success" title="Comment sent">{sent}</Alert>}
+      {draft && !commenting && form}
+      <Card className="gallery__stage">
+        <div className="pin-canvas" ref={canvas}>
+          {children}
+          {(pins.data ?? []).filter((p) => p.x || p.y).map((p) => (
+            <span key={p.id} className="pin" style={{ left: `${p.x}%`, top: `${p.y}%` }} title={`${p.id} · ${p.author}: ${p.text}`} aria-hidden="true">{p.id.slice(1)}</span>
+          ))}
+          {commenting && <div ref={overlay} className="pin-overlay" onClick={place} aria-hidden="true" />}
+          {commenting && draft && (
+            <>
+              <span className="pin pin--draft" style={{ left: `${draft.x}%`, top: `${draft.y}%` }} aria-hidden="true">+</span>
+              <div className="pin-popover" style={{ left: `min(${draft.x}%, calc(100% - var(--fx-spacing-12) * 8))`, top: `${draft.y}%` }}>{form}</div>
+            </>
+          )}
+        </div>
+      </Card>
+      {(pins.data?.length ?? 0) > 0 && (
+        <Card as="section" aria-labelledby="pins-title">
+          <h2 id="pins-title" className="fx-typo-heading-base">Comments on this page</h2>
+          <ol className="pin-list">
+            {pins.data!.map((p) => (
+              <li key={p.id}>
+                <strong>{p.id}</strong> {p.hint && <span className="muted">on “{p.hint}”</span>} — {p.text}
+                <span className="muted"> · {p.author} · feedback {p.feedbackRef} in {p.caseId}</span>
+              </li>
+            ))}
+          </ol>
+        </Card>
+      )}
+    </div>
   );
 }

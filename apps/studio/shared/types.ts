@@ -23,9 +23,58 @@ export type CaseStatus = (typeof CASE_STATUSES)[number];
 export type Stage = "case-file" | "design" | "code" | "published";
 export type RunStage = "intake" | "revise" | "figma" | "build" | "publish";
 
+/** The signed-in person. Identity comes from Microsoft 365 sign-in (or dev sign-in); roles from the Station user list. */
 export interface StudioUser {
+  email: string;
   name: string;
-  role: string;
+  /** Station roles assigned by an Admin (one or more of fdi.config.json studio.roles). */
+  roles: string[];
+  /** Admins manage Station users and roles, and can see every case. Not an approval role. */
+  isAdmin: boolean;
+}
+
+/** "Name (Role, Role)" — how a person is written into case files and run logs. */
+export function userLabel(u: Pick<StudioUser, "name" | "roles">): string {
+  return `${u.name} (${u.roles.length ? u.roles.join(", ") : "no role"})`;
+}
+
+/** A Station user as an Admin sees it. */
+export interface StationUser extends StudioUser {
+  active: boolean;
+  invitedBy: string | null;
+  invitedAt: string | null;
+  lastSignInAt: string | null;
+}
+
+export interface CaseMember {
+  email: string;
+  name: string;
+  roles: string[];
+  isOwner: boolean;
+  isCreator: boolean;
+}
+
+/** An image in the case's figma/ folder: approved design frames or screenshots of the built page. */
+export interface DesignAsset {
+  name: string;
+  group: "design" | "build";
+  url: string;
+}
+
+/** A comment pinned to a spot on a built gallery page. It is also written to the case as §11 feedback. */
+export interface PagePin {
+  id: string;
+  pageId: string;
+  caseId: string;
+  /** Position as a percentage of the page area, so pins survive different widths. */
+  x: number;
+  y: number;
+  text: string;
+  /** What was under the pointer, e.g. a button label. */
+  hint: string;
+  author: string;
+  createdAt: string;
+  feedbackRef: string;
 }
 
 export interface CaseSummary {
@@ -45,6 +94,8 @@ export interface CaseSummary {
   prUrl: string | null;
   /** Set when the case was raised from a gallery page as a change to it. */
   changeOf: ChangeOf | null;
+  /** Email of the person who created the case in Studio (null for cases created before membership). */
+  creatorEmail: string | null;
   activeRun: RunSummary | null;
   waitingOn: { roles: string[]; text: string };
 }
@@ -88,6 +139,12 @@ export interface CaseDetail extends CaseSummary {
   runs: RunSummary[];
   actions: CaseAction[];
   canComment: boolean;
+  members: CaseMember[];
+  /** Creator, owner or Admin: may invite and remove members. */
+  canManageMembers: boolean;
+  design: DesignAsset[];
+  /** Gallery page built by this case, if registered. */
+  builtPageId: string | null;
 }
 
 export type RunState = "queued" | "running" | "succeeded" | "failed" | "cancelled";
@@ -185,7 +242,9 @@ export interface LibraryPayload {
 
 export interface StudioMeta {
   roles: string[];
-  authMode: "local";
+  /** "entra" = Microsoft 365 sign-in; "dev" = development sign-in by email, never for production. */
+  authMode: "entra" | "dev";
+  allowedDomain: string;
   agentReady: boolean;
   agentProblem: string | null;
   model: string;

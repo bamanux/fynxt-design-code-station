@@ -1,13 +1,25 @@
 import { createReadStream } from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { CaseStatus, ChangeOf, RunStage, StudioMeta } from "../shared/types";
-import { addFeedback, caseDir, CASE_ID, createRequest, decide, getCase, inputFile, listCases, UPLOAD_LIMITS } from "./cases";
+import { entraConfigProblem, FLOW_COOKIE, finishSignIn, isAllowedEmail, startSignIn } from "./auth";
+import { accessCase, addFeedback, caseDir, CASE_ID, createRequest, decide, designFile, getCase, inputFile, listCases, UPLOAD_LIMITS } from "./cases";
 import { env, fdiConfig } from "./env";
 import { HttpError } from "./errors";
-import { readForm, readJson, sendJson, userFrom } from "./http";
+import { assertSameOriginWrite, currentUser, readForm, readJson, sendJson } from "./http";
 import { galleryEntries, library } from "./library";
-import { canRun, canSubmit, headlessBlocker, stageFor } from "./permissions";
+import { addMember, memberEmails, readMembers, removeMember, setOwner } from "./members";
+import { canComment, canRun, canSubmit, headlessBlocker, stageFor } from "./permissions";
+import { addPin, listPins } from "./pins";
 import { agentProblem, cancelRun, startRun, subscribe } from "./runs";
+import { clearSession, cookie, readCookie, setSession } from "./session";
+import { inviteUser, listUsers, recordSignIn, updateUser } from "./users";
+
+function redirect(res: ServerResponse, location: string, cookies: string[] = []): void {
+  res.writeHead(302, { Location: location, "Cache-Control": "no-store", ...(cookies.length ? { "Set-Cookie": cookies } : {}) });
+  res.end();
+}
+
+const signInError = (message: string) => `/?signin_error=${encodeURIComponent(message)}`;
 
 function changeNote(change: (ChangeOf & { caseFolder: string | null }) | undefined): string {
   if (!change) return "";
@@ -30,28 +42,86 @@ function promptFor(stage: RunStage, id: string, folder: string, title: string, r
   }
 }
 
-async function route(req: IncomingMessage, res: ServerResponse, path: string): Promise<void> {
+async function route(req: IncomingMessage, res: ServerResponse, path: string, query: URLSearchParams): Promise<void> {
   const method = req.method ?? "GET";
   const parts = path.split("/").filter(Boolean).slice(1); // drop "api"
+  assertSameOriginWrite(req);
 
   if (method === "GET" && parts[0] === "meta") {
     const cfg = fdiConfig();
     const problem = agentProblem();
     const meta: StudioMeta = {
-      roles: cfg.studio.roles, authMode: env.authMode, agentReady: problem === null, agentProblem: problem,
+      roles: cfg.studio.roles, authMode: env.authMode, allowedDomain: env.allowedDomain, agentReady: problem === null, agentProblem: problem,
       model: env.model, maxBudgetUsd: env.maxBudgetUsd, permissionsNote: cfg.studio.status,
     };
     return sendJson(res, 200, meta);
   }
 
-  const user = userFrom(req);
+  // ---------- Sign-in (Microsoft 365, @allowedDomain only; dev sign-in when not in entra mode)
+  if (parts[0] === "auth") {
+    if (parts[1] === "login" && method === "GET") {
+      const problem = entraConfigProblem() ?? (env.authMode !== "entra" ? "Microsoft sign-in is off (STUDIO_AUTH_MODE is not \"entra\")." : null);
+      if (problem) return redirect(res, signInError(problem));
+      const { url, flowCookie } = startSignIn();
+      return redirect(res, url, [cookie(FLOW_COOKIE, flowCookie, 600)]);
+    }
+    if (parts[1] === "callback" && method === "GET") {
+      try {
+        const who = await finishSignIn(query, readCookie(req, FLOW_COOKIE));
+        if (!isAllowedEmail(who.email)) return redirect(res, signInError(`Only @${env.allowedDomain} accounts can use FDI Studio.`), [cookie(FLOW_COOKIE, "", 0)]);
+        const user = await recordSignIn(who.email, who.name);
+        if (!user) return redirect(res, signInError(`${who.email} isn't a Station user yet. Ask an Admin to invite you.`), [cookie(FLOW_COOKIE, "", 0)]);
+        setSession(res, user.email);
+        res.setHeader("Set-Cookie", [res.getHeader("Set-Cookie") as string, cookie(FLOW_COOKIE, "", 0)]);
+        return redirect(res, "/");
+      } catch (error) {
+        return redirect(res, signInError(error instanceof HttpError ? error.message : "Sign-in failed. Try again."), [cookie(FLOW_COOKIE, "", 0)]);
+      }
+    }
+    if (parts[1] === "dev" && method === "POST") {
+      if (env.authMode === "entra") throw new HttpError(404, "Not found");
+      const body = await readJson<{ email?: string }>(req);
+      const email = String(body.email ?? "").trim().toLowerCase();
+      if (!isAllowedEmail(email)) throw new HttpError(400, `Use your @${env.allowedDomain} address.`);
+      const user = await recordSignIn(email, "");
+      if (!user) throw new HttpError(403, `${email} isn't a Station user yet. Ask an Admin to invite you.`);
+      setSession(res, user.email);
+      return sendJson(res, 200, user);
+    }
+    if (parts[1] === "logout" && method === "POST") {
+      clearSession(res);
+      return sendJson(res, 200, { ok: true });
+    }
+  }
+
+  const user = await currentUser(req);
+
+  if (parts[0] === "me" && method === "GET") return sendJson(res, 200, user);
+
+  // ---------- Station users (Admins only)
+  if (parts[0] === "users") {
+    if (parts.length === 1 && method === "GET") {
+      // Everyone may read names and roles (to invite people to a case); only Admins see the admin fields.
+      const users = await listUsers();
+      return sendJson(res, 200, user.isAdmin ? users : users.filter((u) => u.active).map(({ email, name, roles }) => ({ email, name, roles, isAdmin: false, active: true, invitedBy: null, invitedAt: null, lastSignInAt: null })));
+    }
+    if (parts.length === 1 && method === "POST") return sendJson(res, 201, await inviteUser(user, await readJson(req)));
+    if (parts.length === 2 && method === "PATCH") return sendJson(res, 200, await updateUser(user, decodeURIComponent(parts[1]!), await readJson(req)));
+  }
 
   if (parts[0] === "library" && method === "GET") return sendJson(res, 200, await library());
+
+  // ---------- Pinned comments on built gallery pages
+  if (parts[0] === "pages" && parts[1] && parts[2] === "pins") {
+    const pageId = decodeURIComponent(parts[1]);
+    if (method === "GET") return sendJson(res, 200, await listPins(pageId));
+    if (method === "POST") return sendJson(res, 201, await addPin(user, pageId, await readJson(req)));
+  }
 
   if (parts[0] === "cases") {
     const id = parts[1];
     if (!id) {
-      if (method === "GET") return sendJson(res, 200, await listCases());
+      if (method === "GET") return sendJson(res, 200, await listCases(user));
       if (method === "POST") {
         if (!canSubmit(user)) throw new HttpError(403, "Your role cannot submit requests.");
         const form = await readForm(req, UPLOAD_LIMITS.maxFiles * UPLOAD_LIMITS.maxFileBytes + 1024 * 1024);
@@ -74,17 +144,19 @@ async function route(req: IncomingMessage, res: ServerResponse, path: string): P
         // A change raised from a gallery page: trust only a page id Studio knows, and take its case from there.
         const pageId = String(form.get("changeOfPage") ?? "").trim();
         let changeOf: (ChangeOf & { caseFolder: string | null }) | undefined;
+        let members: string[] = [];
         if (pageId) {
           const entry = (await galleryEntries()).find((e) => e.id === pageId);
           if (!entry) throw new HttpError(400, "That gallery page isn't registered in the Station.");
-          const caseFolder = entry.caseId ? await caseDir(entry.caseId).then((c) => c.folder, () => null) : null;
-          changeOf = { pageId: entry.id, pageLabel: entry.label, caseId: entry.caseId, template: entry.template, caseFolder };
+          const source = entry.caseId ? await caseDir(entry.caseId).catch(() => null) : null;
+          changeOf = { pageId: entry.id, pageLabel: entry.label, caseId: entry.caseId, template: entry.template, caseFolder: source?.folder ?? null };
+          // The source case's team works on the change too.
+          if (source) members = memberEmails(await readMembers(source.dir));
         }
-        const created = await createRequest({ title, module, description, links, files, changeOf }, user);
-        const requestedBy = `${user.name} (${user.role})`;
+        const created = await createRequest({ title, module, description, links, files, changeOf, members }, user);
         let runError: string | null = null;
         try {
-          await startRun({ caseId: created.id, caseDir: created.dir, stage: "intake", user, prompt: promptFor("intake", created.id, created.folder, title, requestedBy, changeOf) });
+          await startRun({ caseId: created.id, caseDir: created.dir, stage: "intake", user, prompt: promptFor("intake", created.id, created.folder, title, `${user.name} <${user.email}>`, changeOf) });
         } catch (error) {
           runError = error instanceof Error ? error.message : String(error);
         }
@@ -94,13 +166,28 @@ async function route(req: IncomingMessage, res: ServerResponse, path: string): P
     if (id && !CASE_ID.test(id)) throw new HttpError(400, "Invalid case id");
     if (id && parts.length === 2 && method === "GET") return sendJson(res, 200, await getCase(id, user));
     if (id && parts[2] === "feedback" && method === "POST") {
+      await accessCase(id, user);
+      if (!canComment(user)) throw new HttpError(403, "Your role cannot comment.");
       const body = await readJson<{ section?: string; text?: string }>(req);
-      await addFeedback(id, user, String(body.section ?? ""), String(body.text ?? "").slice(0, 4000));
+      const text = String(body.text ?? "").trim().slice(0, 4000);
+      if (!text) throw new HttpError(400, "Feedback text is required.");
+      await addFeedback(id, user, String(body.section ?? ""), text);
       return sendJson(res, 200, await getCase(id, user));
     }
     if (id && parts[2] === "decision" && method === "POST") {
+      await accessCase(id, user);
       const body = await readJson<{ to?: string; note?: string }>(req);
       await decide(id, user, String(body.to ?? "") as CaseStatus, String(body.note ?? "").slice(0, 4000));
+      return sendJson(res, 200, await getCase(id, user));
+    }
+    if (id && parts[2] === "members") {
+      const { dir } = await accessCase(id, user);
+      const body = method === "GET" ? {} : await readJson<{ email?: string }>(req);
+      const email = String((body as { email?: string }).email ?? "");
+      if (method === "POST" && parts.length === 3) await addMember(dir, user, email);
+      else if (method === "DELETE" && parts.length === 3) await removeMember(dir, user, email);
+      else if (method === "POST" && parts[3] === "owner") await setOwner(dir, user, email);
+      else throw new HttpError(404, "Not found");
       return sendJson(res, 200, await getCase(id, user));
     }
     if (id && parts[2] === "runs" && method === "POST") {
@@ -119,7 +206,7 @@ async function route(req: IncomingMessage, res: ServerResponse, path: string): P
       }
     }
     if (id && parts[2] === "inputs" && parts[3] && method === "GET") {
-      const file = await inputFile(id, decodeURIComponent(parts[3]));
+      const file = await inputFile(id, user, decodeURIComponent(parts[3]));
       res.writeHead(200, {
         "Content-Type": "application/octet-stream",
         "Content-Disposition": `attachment; filename="${file.name.replace(/"/g, "")}"`,
@@ -128,14 +215,20 @@ async function route(req: IncomingMessage, res: ServerResponse, path: string): P
       createReadStream(file.path).pipe(res);
       return;
     }
+    if (id && parts[2] === "design" && parts[3] && parts[4] && method === "GET") {
+      const path = await designFile(id, user, parts[3], decodeURIComponent(parts[4]));
+      res.writeHead(200, { "Content-Type": "image/png", "Cache-Control": "private, max-age=300", "X-Content-Type-Options": "nosniff" });
+      createReadStream(path).pipe(res);
+      return;
+    }
   }
 
   if (parts[0] === "runs" && parts[1]) {
     const runId = parts[1];
     const caseId = runId.match(/^(DCF-\d{4})-/)?.[1];
     if (!caseId) throw new HttpError(400, "Invalid run id");
+    const { dir } = await accessCase(caseId, user);
     if (parts[2] === "events" && method === "GET") {
-      const { dir } = await caseDir(caseId);
       res.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive" });
       const unsubscribe = await subscribe(runId, dir, (event) => {
         if (event) res.write(`data: ${JSON.stringify(event)}\n\n`);
@@ -159,9 +252,9 @@ async function route(req: IncomingMessage, res: ServerResponse, path: string): P
 
 /** Handles /api/* requests. Shared by the Vite dev server and the production server. */
 export async function handleApi(req: IncomingMessage, res: ServerResponse): Promise<void> {
-  const path = new URL(req.url ?? "/", "http://studio.local").pathname;
+  const url = new URL(req.url ?? "/", "http://studio.local");
   try {
-    await route(req, res, path);
+    await route(req, res, url.pathname, url.searchParams);
   } catch (error) {
     if (res.headersSent) return void res.end();
     if (error instanceof HttpError) return sendJson(res, error.status, { error: error.message });

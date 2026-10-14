@@ -26,8 +26,9 @@ export function DashboardPage() {
   const { user, meta } = useSession();
   const cases = useAsync(api.cases, []);
   const list = cases.data ?? [];
-  const mine = list.filter((c) => user && c.waitingOn.roles.includes(user.role));
-  const requested = list.filter((c) => user && c.requestedBy.startsWith(`${user.name} (`));
+  // The server only returns cases this user is a member of; "Needs you" narrows that to their roles.
+  const mine = list.filter((c) => user && c.waitingOn.roles.some((r) => user.roles.includes(r)));
+  const requested = list.filter((c) => user && c.creatorEmail === user.email);
   const working = list.filter((c) => c.activeRun);
 
   return (

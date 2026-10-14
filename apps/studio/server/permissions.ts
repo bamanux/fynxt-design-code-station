@@ -1,8 +1,17 @@
 import type { CaseAction, CaseStatus, RunStage, StudioUser } from "../shared/types";
 import { fdiConfig, type FdiConfig } from "./env";
 
+type Gate = "caseFile" | "design" | "code";
+type Decision = { to: CaseStatus; label: string; tone: "approve" | "changes"; gate?: Gate };
+
+/**
+ * Sends a built page's feedback (e.g. pinned comments) back through every level: case file → Figma → code.
+ * Owned by the case-file approver (Product Designer). agent/fdi/README.md §3, "Reopen".
+ */
+const REOPEN: Decision = { to: "CHANGES-REQUESTED", label: "Send feedback to FDI (update case file, design and code)", tone: "changes", gate: "caseFile" };
+
 /** Human decisions available at each review gate (agent/fdi/README.md §3). */
-const DECISIONS: Partial<Record<CaseStatus, { to: CaseStatus; label: string; tone: "approve" | "changes" }[]>> = {
+const DECISIONS: Partial<Record<CaseStatus, Decision[]>> = {
   "IN-REVIEW": [
     { to: "APPROVED", label: "Approve case file", tone: "approve" },
     { to: "CHANGES-REQUESTED", label: "Request changes", tone: "changes" },
@@ -14,7 +23,10 @@ const DECISIONS: Partial<Record<CaseStatus, { to: CaseStatus; label: string; ton
   "CODE-REVIEW": [
     { to: "CODE-APPROVED", label: "Approve code", tone: "approve" },
     { to: "CODE-CHANGES-REQUESTED", label: "Request code changes", tone: "changes" },
+    REOPEN,
   ],
+  "CODE-APPROVED": [REOPEN],
+  PUBLISHED: [REOPEN],
 };
 
 /** Which FDI stage a status unlocks (the gate the command itself re-checks). */
@@ -28,25 +40,27 @@ const NEXT_RUN: Partial<Record<CaseStatus, { stage: RunStage; label: string }>> 
   "CODE-APPROVED": { stage: "publish", label: "Publish to gallery" },
 };
 
-function allows(rule: "*" | string[], role: string): boolean {
-  return rule === "*" || rule.includes(role);
+/** "*" allows every signed-in user; otherwise the user needs at least one of the listed roles. */
+function allows(rule: "*" | string[], roles: string[]): boolean {
+  return rule === "*" || roles.some((r) => rule.includes(r));
 }
 
 export function canSubmit(user: StudioUser, cfg: FdiConfig = fdiConfig()): boolean {
-  return allows(cfg.studio.permissions.submitRequest, user.role);
+  return allows(cfg.studio.permissions.submitRequest, user.roles);
 }
 
 export function canComment(user: StudioUser, cfg: FdiConfig = fdiConfig()): boolean {
-  return allows(cfg.studio.permissions.comment, user.role);
+  return allows(cfg.studio.permissions.comment, user.roles);
 }
 
 export function decisionsFor(status: CaseStatus) {
   return DECISIONS[status] ?? [];
 }
 
-export function canDecide(user: StudioUser, status: CaseStatus, cfg: FdiConfig = fdiConfig()): boolean {
-  const gate = cfg.studio.permissions.decide[status];
-  return gate !== undefined && cfg.approvers[gate].includes(user.role);
+/** Whether the user may take this decision: the decision's own gate, else the status's gate from config. */
+export function canDecide(user: StudioUser, status: CaseStatus, decision?: Decision, cfg: FdiConfig = fdiConfig()): boolean {
+  const gate = decision?.gate ?? cfg.studio.permissions.decide[status];
+  return gate !== undefined && cfg.approvers[gate].some((r) => user.roles.includes(r));
 }
 
 export function stageFor(status: CaseStatus): RunStage | null {
@@ -55,7 +69,7 @@ export function stageFor(status: CaseStatus): RunStage | null {
 
 export function canRun(user: StudioUser, stage: RunStage, cfg: FdiConfig = fdiConfig()): boolean {
   if (stage === "intake") return canSubmit(user, cfg);
-  return allows(cfg.studio.permissions.runStage[stage] ?? [], user.role);
+  return allows(cfg.studio.permissions.runStage[stage] ?? [], user.roles);
 }
 
 /** Why a stage can't run headlessly from Studio, or null when it can. */
@@ -65,9 +79,9 @@ export function headlessBlocker(stage: RunStage, cfg: FdiConfig = fdiConfig()): 
 
 export function actionsFor(user: StudioUser, status: CaseStatus, busy: boolean, cfg: FdiConfig = fdiConfig()): CaseAction[] {
   const actions: CaseAction[] = [];
-  if (!busy && canDecide(user, status, cfg)) {
+  if (!busy) {
     for (const d of decisionsFor(status)) {
-      actions.push({ kind: "decide", to: d.to, label: d.label, tone: d.tone, requiresNote: d.tone === "changes" });
+      if (canDecide(user, status, d, cfg)) actions.push({ kind: "decide", to: d.to, label: d.label, tone: d.tone, requiresNote: d.tone === "changes" });
     }
   }
   const next = NEXT_RUN[status];

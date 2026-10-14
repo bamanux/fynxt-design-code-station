@@ -1,12 +1,14 @@
 import { existsSync } from "node:fs";
 import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
-import type { CaseDetail, CaseStatus, CaseSummary, ChangeOf, FeedbackItem, HistoryItem, InputFile, StudioUser } from "../shared/types";
-import { CASE_STATUSES } from "../shared/types";
+import type { CaseDetail, CaseStatus, CaseSummary, ChangeOf, DesignAsset, FeedbackItem, HistoryItem, InputFile, StudioUser } from "../shared/types";
+import { CASE_STATUSES, userLabel } from "../shared/types";
 import { env } from "./env";
 import { HttpError } from "./errors";
 import { appendTableRow, isPlaceholderRow, parseFrontmatter, sectionTable, setFrontmatter, type FrontmatterValue } from "./markdown";
 import { actionsFor, canComment, canDecide, decisionsFor, waitingOn } from "./permissions";
+import { canManage, canView, describeMembers, initMembers, readMembers, type Members } from "./members";
+import { pageForCase } from "./pages";
 import { activeRunFor, listRuns } from "./runs";
 
 export const CASE_ID = /^DCF-\d{4}$/;
@@ -90,13 +92,14 @@ async function readCase(id: string, folder: string): Promise<{ summary: CaseSumm
   const activeRun = activeRunFor(id);
   const meta = JSON.parse(await readFile(join(dir, "request.json"), "utf8").catch(() => "{}")) as Partial<RequestMeta>;
   const changeOf = meta.changeOf ?? null;
+  const creatorEmail = (await readMembers(dir)).creator;
   if (!existsSync(file)) {
     return {
       md: null,
       summary: {
         id, folder, title: meta.title ?? folder, module: meta.module ?? "", status: "NEW", revision: 0, owner: "",
         requestedBy: meta.requestedBy ?? "", created: meta.createdAt?.slice(0, 10) ?? "", updated: meta.createdAt?.slice(0, 10) ?? "",
-        openFeedback: 0, openQuestions: 0, figmaUrl: null, prUrl: null, changeOf, activeRun,
+        openFeedback: 0, openQuestions: 0, figmaUrl: null, prUrl: null, changeOf, creatorEmail, activeRun,
         waitingOn: activeRun ? waitingOn("NEW") : { roles: [], text: "Waiting for FDI intake to start" },
       },
     };
@@ -122,19 +125,59 @@ async function readCase(id: string, folder: string): Promise<{ summary: CaseSumm
       figmaUrl: fileKey ? `https://www.figma.com/design/${fileKey}${node ? `?node-id=${node.replace(":", "-")}` : ""}` : null,
       prUrl: nested(fm.station, "pr"),
       changeOf,
+      creatorEmail,
       activeRun,
       waitingOn: waitingOn(asStatus(str(fm.status))),
     },
   };
 }
 
-export async function listCases(): Promise<CaseSummary[]> {
+/** Every case, unfiltered. Server-internal only (e.g. gallery status badges); never send to a client as-is. */
+export async function allCaseSummaries(): Promise<CaseSummary[]> {
   const folders = await caseFolders();
   return Promise.all(folders.map(async (c) => (await readCase(c.id, c.folder)).summary));
 }
 
-export async function getCase(id: string, user: StudioUser): Promise<CaseDetail> {
+/** Cases this user may see: members (creator, owner, invited) and Admins. */
+export async function listCases(user: StudioUser): Promise<CaseSummary[]> {
+  const folders = await caseFolders();
+  const visible = await Promise.all(folders.map(async (c) => (canView(user, await readMembers(join(casesRoot(), c.folder))) ? c : null)));
+  return Promise.all(visible.filter((c): c is { id: string; folder: string } => c !== null).map(async (c) => (await readCase(c.id, c.folder)).summary));
+}
+
+/** Resolves a case the user may see. Non-members get 404 so a case's existence doesn't leak. */
+export async function accessCase(id: string, user: StudioUser): Promise<{ dir: string; folder: string; members: Members }> {
   const { dir, folder } = await caseDir(id);
+  const members = await readMembers(dir);
+  if (!canView(user, members)) throw new HttpError(404, `Case ${id} not found`);
+  return { dir, folder, members };
+}
+
+const PNG = /^[\w.\- ]+\.png$/;
+
+/** Approved design frames (figma/*.png) and screenshots of the built page (figma/code-verification/*.png). */
+async function designAssets(id: string, dir: string): Promise<DesignAsset[]> {
+  const out: DesignAsset[] = [];
+  for (const [group, sub] of [["design", "figma"], ["build", "figma/code-verification"]] as const) {
+    const folder = join(dir, sub);
+    if (!existsSync(folder)) continue;
+    for (const name of (await readdir(folder)).filter((n) => PNG.test(n)).sort())
+      out.push({ name, group, url: `/api/cases/${id}/design/${group}/${encodeURIComponent(name)}` });
+  }
+  return out;
+}
+
+export async function designFile(id: string, user: StudioUser, group: string, name: string): Promise<string> {
+  const { dir } = await accessCase(id, user);
+  const sub = group === "design" ? "figma" : group === "build" ? "figma/code-verification" : null;
+  if (!sub || !PNG.test(name)) throw new HttpError(404, "File not found");
+  const path = join(dir, sub, name);
+  if (!existsSync(path)) throw new HttpError(404, "File not found");
+  return path;
+}
+
+export async function getCase(id: string, user: StudioUser): Promise<CaseDetail> {
+  const { dir, folder, members } = await accessCase(id, user);
   const { summary, md } = await readCase(id, folder);
   const inputsDir = join(dir, "inputs");
   const inputs: InputFile[] = existsSync(inputsDir)
@@ -150,6 +193,10 @@ export async function getCase(id: string, user: StudioUser): Promise<CaseDetail>
     runs: await listRuns(id, dir),
     actions: actionsFor(user, summary.status, summary.activeRun !== null),
     canComment: md !== null && canComment(user),
+    members: await describeMembers(members),
+    canManageMembers: canManage(user, members),
+    design: await designAssets(id, dir),
+    builtPageId: await pageForCase(id),
   };
 }
 
@@ -170,6 +217,8 @@ export interface NewRequest {
   files: { name: string; data: Buffer }[];
   /** Raised from a gallery page: the page and the case that built it. */
   changeOf?: ChangeOf & { caseFolder: string | null };
+  /** People invited from the start (e.g. the source case's members for a change request). */
+  members?: string[];
 }
 
 /** Creates `design-cases/DCF-NNNN-<slug>/` with inputs. FDI intake then writes case-file.md. */
@@ -187,7 +236,7 @@ export async function createRequest(req: NewRequest, user: StudioUser): Promise<
     }
     const inputs = join(dir, "inputs");
     await mkdir(inputs);
-    const requestedBy = `${user.name} (${user.role})`;
+    const requestedBy = userLabel(user);
     const request = [
       `# Request — ${req.title}`,
       "",
@@ -225,6 +274,7 @@ export async function createRequest(req: NewRequest, user: StudioUser): Promise<
     const changeOf = req.changeOf ? { pageId: req.changeOf.pageId, pageLabel: req.changeOf.pageLabel, caseId: req.changeOf.caseId, template: req.changeOf.template } : undefined;
     const meta: RequestMeta = { id, title: req.title, module: req.module, requestedBy, createdAt: new Date().toISOString(), links: req.links, ...(changeOf ? { changeOf } : {}) };
     await writeFile(join(dir, "request.json"), JSON.stringify(meta, null, 2));
+    await initMembers(dir, user.email, req.members ?? []);
     return { id, dir, folder };
   }
   throw new HttpError(409, "Could not allocate a case id; try again.");
@@ -234,19 +284,21 @@ function assertIdle(id: string) {
   if (activeRunFor(id)) throw new HttpError(409, "FDI is working on this case right now. Try again when the run finishes.");
 }
 
-export async function addFeedback(id: string, user: StudioUser, section: string, text: string): Promise<void> {
+/** Appends a §11 feedback row and returns its ref (e.g. "F12"). Callers check who may comment on this case. */
+export async function addFeedback(id: string, user: StudioUser, section: string, text: string): Promise<string> {
   if (!canComment(user)) throw new HttpError(403, "Your role cannot comment.");
   if (!text.trim()) throw new HttpError(400, "Feedback text is required.");
   const { dir } = await caseDir(id);
-  await withLock(id, async () => {
+  return withLock(id, async () => {
     assertIdle(id);
     const file = join(dir, "case-file.md");
     if (!existsSync(file)) throw new HttpError(409, "The case file has not been written yet.");
     const md = await readFile(file, "utf8");
     const fm = parseFrontmatter(md);
     const n = feedbackItems(md).length + 1;
-    const out = appendTableRow(md, 11, [`F${n}`, str(fm.revision) || "1", `${user.name} (${user.role})`, section.trim() || "General", text, "", "No"]);
+    const out = appendTableRow(md, 11, [`F${n}`, str(fm.revision) || "1", userLabel(user), section.trim() || "General", text, "", "No"]);
     await writeFile(file, setFrontmatter(out, "updated", today()));
+    return `F${n}`;
   });
 }
 
@@ -261,9 +313,9 @@ export async function decide(id: string, user: StudioUser, to: CaseStatus, note:
     const from = asStatus(str(fm.status));
     const option = decisionsFor(from).find((d) => d.to === to);
     if (!option) throw new HttpError(409, `Cannot move from ${from} to ${to}.`);
-    if (!canDecide(user, from)) throw new HttpError(403, `Only the configured approvers can decide at ${from}.`);
+    if (!canDecide(user, from, option)) throw new HttpError(403, `Only the configured approvers can take this decision at ${from}.`);
     if (option.tone === "changes" && !note.trim()) throw new HttpError(400, "Describe the changes you need.");
-    const who = `${user.name} (${user.role})`;
+    const who = userLabel(user);
     if (option.tone === "changes") {
       const n = feedbackItems(md).length + 1;
       md = appendTableRow(md, 11, [`F${n}`, str(fm.revision) || "1", who, "Gate decision", note, "", "No"]);
@@ -274,8 +326,8 @@ export async function decide(id: string, user: StudioUser, to: CaseStatus, note:
   });
 }
 
-export async function inputFile(id: string, name: string): Promise<{ path: string; name: string }> {
-  const { dir } = await caseDir(id);
+export async function inputFile(id: string, user: StudioUser, name: string): Promise<{ path: string; name: string }> {
+  const { dir } = await accessCase(id, user);
   const safe = safeFileName(name);
   const path = join(dir, "inputs", safe);
   if (safe !== name || !existsSync(path)) throw new HttpError(404, "File not found");

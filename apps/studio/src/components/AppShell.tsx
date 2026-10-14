@@ -1,5 +1,5 @@
 import { Button } from "@fynxt/ui";
-import { FilePlus2, FolderKanban, LayoutDashboard, LayoutTemplate, Library, Moon, Sun, UserRound } from "lucide-react";
+import { FilePlus2, FolderKanban, LayoutDashboard, LayoutTemplate, Library, Moon, Sun, UserRound, UsersRound } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link, usePath } from "../lib/router";
 import { useSession } from "../lib/session";
@@ -14,7 +14,9 @@ const NAV = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const path = usePath();
-  const { user, setUser, theme, setTheme } = useSession();
+  const { user, signOut, theme, setTheme } = useSession();
+  // Admin tools appear only for Admins; everything else is filtered by role and case membership on the server.
+  const nav = user?.isAdmin ? [...NAV, { href: "/admin/users", label: "Users & roles", icon: UsersRound }] : NAV;
   const active = (href: string) => (href === "/" ? path === "/" : path.startsWith(href));
   return (
     <div className="studio">
@@ -41,17 +43,20 @@ export function AppShell({ children }: { children: ReactNode }) {
             <UserRound aria-hidden="true" />
             <span>
               <strong>{user?.name}</strong>
-              <span className="studio__role">{user?.role}</span>
+              <span className="studio__role">
+                {user?.roles.length ? user.roles.join(", ") : "No role yet"}
+                {user?.isAdmin && " · Admin"}
+              </span>
             </span>
           </span>
-          <Button variant="secondary" size="s" onClick={() => setUser(null)}>
-            Switch user
+          <Button variant="secondary" size="s" onClick={() => void signOut()}>
+            Sign out
           </Button>
         </div>
       </header>
       <nav className="studio__nav" aria-label="Main">
         <ul>
-          {NAV.map(({ href, label, icon: Icon }) => (
+          {nav.map(({ href, label, icon: Icon }) => (
             <li key={href}>
               <Link href={href} className="studio__nav-link" aria-current={active(href) ? "page" : undefined}>
                 <Icon aria-hidden="true" />
