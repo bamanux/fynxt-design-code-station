@@ -1,4 +1,4 @@
-import { ChevronDown } from "lucide-react";
+import { Calendar, ChevronDown, ChevronUp } from "lucide-react";
 import {
   forwardRef,
   useId,
@@ -9,7 +9,6 @@ import {
   type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from "react";
-import { Calendar, ChevronDown, ChevronUp } from "lucide-react";
 
 /** FDS-101 Input/Textarea/Select validation states that change the box or helper colour. */
 export type FieldStatus = "default" | "error" | "success" | "info";
