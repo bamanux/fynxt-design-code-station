@@ -1,0 +1,104 @@
+/* DCF-0003 ConditionBuilder (candidate). Figma work file 0CwREH91xlsQOFpAUp852B, approved version
+   2410117832155798624: Condition Row 84:4954, Condition Group v2 95:7994, Logic Tree 94:7364, Rules Summary 84:4989. */
+.fx-cb {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fx-spacing-4);
+  padding: var(--fx-spacing-5);
+  background: var(--fx-surface-card);
+  border: var(--fx-border-width-thin) solid var(--fx-border-default);
+  border-radius: var(--fx-radius-lg);
+  container-type: inline-size;
+}
+
+.fx-cb__description { display: flex; align-items: center; justify-content: space-between; gap: var(--fx-spacing-4); }
+.fx-cb__description-text {
+  margin: 0;
+  color: var(--fx-text-muted-foreground);
+  font-family: var(--fx-typography-body-sm-font-family);
+  font-size: var(--fx-typography-body-sm-font-size);
+  line-height: var(--fx-typography-body-sm-line-height);
+}
+
+.fx-cb__root-row { display: flex; align-items: center; justify-content: space-between; gap: var(--fx-spacing-3); flex-wrap: wrap; }
+.fx-cb__match { inline-size: calc(var(--fx-spacing-12) * 2.5); }
+.fx-cb__actions,
+.fx-cb__group-actions { display: flex; align-items: center; gap: var(--fx-spacing-3); flex-wrap: wrap; }
+
+.fx-cb__loading { display: flex; align-items: center; justify-content: center; gap: var(--fx-spacing-2); padding-block: var(--fx-spacing-10); color: var(--fx-text-muted-foreground); }
+.fx-cb__error { display: flex; flex-direction: column; align-items: flex-start; gap: var(--fx-spacing-3); }
+
+/* Dotted tree: the root marker sits under the All / Any dropdown, the Items list carries the line. */
+.fx-cb__tree { display: flex; flex-direction: column; padding-inline-start: var(--fx-spacing-3); color: var(--fx-brand-primary); }
+.fx-cb__tree--inner { padding-inline-start: 0; }
+.fx-cb__root { display: block; }
+.fx-cb__items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fx-spacing-3);
+  margin: 0;
+  margin-inline-start: var(--fx-spacing-1);
+  padding: var(--fx-spacing-1) 0 0;
+  list-style: none;
+  border-inline-start: var(--fx-border-width-thin) dashed var(--fx-brand-primary);
+}
+.fx-cb__item { display: flex; align-items: flex-start; }
+.fx-cb__branch-slot { flex: none; display: flex; padding-block-start: 34px; /* OBSERVED: no token — DCF-0003 (centres the arrow on the 40px box under the 16px label + 6px gap) */ }
+.fx-cb__branch-slot--group { padding-block-start: var(--fx-spacing-7); }
+.fx-cb__branch { display: block; color: var(--fx-brand-primary); }
+
+.fx-cb__rule { flex: 1; min-inline-size: 0; display: flex; align-items: flex-start; gap: var(--fx-spacing-3); }
+.fx-cb__controls { flex: 1; min-inline-size: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--fx-spacing-3); }
+/* The delete icon lines up with the input boxes: label row (spacing/4) plus the Field gap (1.5 × spacing/1). */
+.fx-cb__delete { margin-block-start: calc(var(--fx-spacing-4) + var(--fx-spacing-1) * 1.5); }
+.fx-cb .fx-cb__delete { color: var(--fx-status-destructive); }
+
+.fx-cb__group {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--fx-spacing-3);
+  padding: var(--fx-spacing-4);
+  background: var(--fx-surface-card);
+  border: var(--fx-border-width-thin) solid var(--fx-border-default);
+  border-radius: var(--fx-radius-lg);
+}
+.fx-cb__group-header {
+  display: flex;
+  align-items: center;
+  gap: var(--fx-spacing-3);
+  flex-wrap: wrap;
+  padding-block-end: var(--fx-spacing-3);
+  border-block-end: var(--fx-border-width-thin) solid var(--fx-border-default);
+}
+.fx-cb__group-title {
+  margin: 0;
+  color: var(--fx-text-foreground);
+  font-family: var(--fx-typography-heading-base-font-family);
+  font-weight: var(--fx-typography-heading-base-font-weight);
+  font-size: var(--fx-typography-heading-base-font-size);
+  line-height: var(--fx-typography-heading-base-line-height);
+}
+.fx-cb__group-actions { margin-inline-start: auto; }
+
+.fx-cb__summary {
+  margin: 0;
+  padding: var(--fx-spacing-3) var(--fx-spacing-4);
+  background: var(--fx-surface-background);
+  border-radius: var(--fx-radius-default);
+  color: var(--fx-text-muted-foreground);
+  font-family: var(--fx-typography-body-sm-font-family);
+  font-size: var(--fx-typography-body-sm-font-size);
+  line-height: var(--fx-typography-body-sm-line-height);
+}
+.fx-cb__summary-label { color: var(--fx-text-foreground); font-weight: var(--fx-typography-body-sm-medium-font-weight); }
+
+/* Responsive (§5.1): 2 columns on tablet widths, stacked on mobile. */
+@container (max-width: 760px) { /* OBSERVED: no token — DCF-0003 container breakpoint (tablet) */
+  .fx-cb__controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@container (max-width: 480px) { /* OBSERVED: no token — DCF-0003 container breakpoint (mobile) */
+  .fx-cb__controls { grid-template-columns: minmax(0, 1fr); }
+  .fx-cb__match { inline-size: 100%; }
+}
