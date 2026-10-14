@@ -27,6 +27,7 @@
 .fx-ip-toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--fx-spacing-3); flex-wrap: wrap; padding: var(--fx-spacing-4); }
 .fx-ip-toolbar__filters { display: flex; align-items: center; gap: var(--fx-spacing-3); flex-wrap: wrap; }
 .fx-ip-toolbar__search { flex: 0 1 calc(var(--fx-spacing-12) * 8); }
+.fx-ip-toolbar__search > * { inline-size: 100%; }
 .fx-ip-toast { position: absolute; inset-block-start: var(--fx-spacing-4); inset-inline-end: var(--fx-spacing-6); z-index: 40; }
 
 /* ---------- P1 full-screen editor (no app shell) */
@@ -49,6 +50,7 @@
 .fx-ip-editor__body { flex: 1; display: flex; justify-content: center; padding: var(--fx-spacing-10) var(--fx-spacing-6); }
 .fx-ip-editor__content { display: flex; flex-direction: column; gap: var(--fx-spacing-6); inline-size: 100%; max-inline-size: calc(var(--fx-spacing-12) * 22.5); }
 .fx-ip-step { gap: var(--fx-spacing-5); }
+.fx-ip-heading { display: flex; flex-direction: column; gap: var(--fx-spacing-1); }
 .fx-ip-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--fx-spacing-6); align-items: start; }
 .fx-ip-divider { inline-size: 100%; margin: 0; border: 0; border-block-start: var(--fx-border-width-thin) solid var(--fx-border-default); }
 .fx-ip-block { display: flex; flex-direction: column; gap: var(--fx-spacing-3); }

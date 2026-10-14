@@ -325,8 +325,15 @@ export function ProgramEditor({ config, programId, onClose }: ProgramEditorProps
                   <TextArea label="Description (optional)" helperText="Up to 500 characters" maxLength={500} value={input.description} onChange={(e) => update({ description: e.target.value })} />
                 </div>
                 <hr className="fx-ip-divider" />
+                <div className="fx-ip-heading">
+                  <h2 className="fx-ip-section__title">
+                    Participant type <span aria-hidden="true">*</span>
+                  </h2>
+                  <p className="fx-ip-section__desc">Who this program is for. It also sets which CRM objects you can use in enrollment rules (Step 2).</p>
+                </div>
                 <RadioGroup
                   legend="Participant type"
+                  hideLegend
                   required
                   name="participant-type"
                   appearance="card"
@@ -335,7 +342,6 @@ export function ProgramEditor({ config, programId, onClose }: ProgramEditorProps
                   value={input.participantType}
                   onChange={requestTypeChange}
                 />
-                <p className="fx-ip-section__desc">Who this program is for. It also sets which CRM objects you can use in enrollment rules (Step 2).</p>
               </>
             )}
 

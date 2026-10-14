@@ -366,7 +366,7 @@ export function ConditionBuilder({
                         <Button variant="secondary" leadingIcon={<Plus />} disabled={!canAddRule || fullGroup} onClick={() => addRuleToGroup(it.id)}>
                           Add rule
                         </Button>
-                        <IconButton className="fx-cb__delete" variant="ghost" size="lg" label={`Delete ${label.toLowerCase()}`} icon={<Trash2 />} onClick={() => requestDeleteGroup(it)} />
+                        <IconButton className="fx-cb__delete fx-cb__delete--inline" variant="ghost" size="lg" label={`Delete ${label.toLowerCase()}`} icon={<Trash2 />} onClick={() => requestDeleteGroup(it)} />
                       </div>
                     </div>
                     <div className="fx-cb__tree fx-cb__tree--inner">

@@ -52,6 +52,7 @@
 /* The delete icon lines up with the input boxes: label row (spacing/4) plus the Field gap (1.5 × spacing/1). */
 .fx-cb__delete { margin-block-start: calc(var(--fx-spacing-4) + var(--fx-spacing-1) * 1.5); }
 .fx-cb .fx-cb__delete { color: var(--fx-status-destructive); }
+.fx-cb__delete--inline { margin-block-start: 0; }
 
 .fx-cb__group {
   flex: 1;
