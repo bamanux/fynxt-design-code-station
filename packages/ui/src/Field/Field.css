@@ -81,3 +81,66 @@
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+
+/* DCF-0003 · Number Input (FDS-101 119:916) and Date Field (121:160).
+   The box is a group: the native control sits inside, so focus and hover move to the wrapper. */
+.fx-field__group {
+  display: flex;
+  align-items: center;
+  padding-inline: 0;
+  overflow: hidden;
+}
+.fx-field:not([data-disabled]):not([data-readonly]) .fx-field__group:hover { border-color: var(--fx-border-strong); }
+.fx-field__group:focus-within { border-color: var(--fx-color-blue-500); box-shadow: 0 0 0 var(--fx-border-width-thin) var(--fx-color-blue-500); }
+.fx-field[data-disabled] .fx-field__group { background: var(--fx-surface-background); cursor: not-allowed; }
+.fx-field[data-status="error"] .fx-field__group { border-color: var(--fx-status-destructive); }
+.fx-field[data-status="success"] .fx-field__group { border-color: var(--fx-status-success); }
+
+.fx-field__control {
+  flex: 1;
+  min-inline-size: 0;
+  block-size: 100%;
+  padding-inline: var(--fx-spacing-3);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  outline: none;
+}
+.fx-field__control:disabled { color: var(--fx-text-muted); cursor: not-allowed; }
+.fx-field--number .fx-field__control { appearance: textfield; -moz-appearance: textfield; }
+.fx-field--number .fx-field__control::-webkit-inner-spin-button,
+.fx-field--number .fx-field__control::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+.fx-number__stepper {
+  display: flex;
+  flex-direction: column;
+  inline-size: var(--fx-spacing-7);
+  block-size: 100%;
+  border-inline-start: var(--fx-border-width-thin) solid var(--fx-border-default);
+}
+.fx-number__step {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  /* FDS-101 binds the chevrons to the primitive neutral/400. */
+  color: var(--fx-color-neutral-400);
+  cursor: pointer;
+}
+.fx-number__step + .fx-number__step { border-block-start: var(--fx-border-width-thin) solid var(--fx-border-default); }
+.fx-number__step:hover:not(:disabled) { background: var(--fx-surface-background); color: var(--fx-text-foreground); }
+.fx-number__step:disabled { cursor: not-allowed; }
+.fx-number__icon { inline-size: var(--fx-spacing-4); block-size: var(--fx-spacing-4); }
+
+.fx-field--date .fx-field__group { gap: var(--fx-spacing-2); padding-inline-start: var(--fx-spacing-3); }
+.fx-field--date .fx-field__control { padding-inline-start: 0; }
+.fx-date__icon {
+  flex: none;
+  inline-size: 18px; /* OBSERVED: no token — DCF-0003 (FDS-101 Date Field CalIcon) */
+  block-size: 18px; /* OBSERVED: no token — DCF-0003 (FDS-101 Date Field CalIcon) */
+  color: var(--fx-text-muted);
+}
