@@ -26,3 +26,6 @@
   line-height: var(--fx-typography-heading-lg-line-height);
 }
 .fx-topnav__actions { display: flex; align-items: center; gap: var(--fx-spacing-2); }
+/* DCF-0002: title + help icon (FDS-101 Top Nav HelpIcon). */
+.fx-topnav__heading { flex: 1; display: flex; align-items: center; gap: var(--fx-spacing-2); }
+.fx-topnav__heading .fx-topnav__title { flex: none; }

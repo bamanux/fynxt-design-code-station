@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { BadgeStatus, ConditionFieldType, ConditionLimits, ConditionObject, ConditionOperator, ConditionValue, SideNavItem, SideNavSettings, SideNavUser } from "@fynxt/ui";
 
 /**
@@ -53,6 +54,8 @@ export interface Band {
   label: string;
   /** Optional free text, shown as a tooltip wherever the band appears (D28, max words: config). */
   description: string;
+  /** Edge of `upTo` (R26, §3 data model): true = "up to and including", false = "below". Default true. */
+  inclusive?: boolean;
 }
 
 export type OverrideOutcomeType = "forceBand" | "atLeastBand" | "setScore" | "reject" | "refer";
@@ -129,6 +132,18 @@ export interface ScoreShellConfig {
   logoMark: string;
   settings?: SideNavSettings;
   user?: SideNavUser;
+  /** Top Nav language switch label, e.g. "EN". */
+  language?: string;
+  /** Unread notifications badge on the Top Nav bell. */
+  notifications?: number;
+  /** Help icon next to the Top Nav title. */
+  help?: PendingControl;
+}
+
+/** A control shown in the design whose behaviour is not specified yet: rendered disabled with the reason. */
+export interface PendingControl {
+  label: string;
+  pendingReason: string;
 }
 
 export interface ScoreBuilderConfig {
@@ -144,6 +159,10 @@ export interface ScoreBuilderConfig {
   inactiveStatus: string;
   /** Status a duplicate gets (Q67, PROPOSED Draft). Drafts have no toggle. */
   draftStatus: string;
+  /** Icon per CRM object id in the outline (e.g. Contact = person, Deal = briefcase). */
+  objectIcons?: Record<string, ReactNode>;
+  /** Rows-per-page choices for the list (first = default). */
+  pageSizes?: number[];
   /** Value categories (I1: Low / Medium / High; configurability Q17). */
   categories: string[];
   /** Operators per field type, for Applies to and override conditions (Q5). */
@@ -158,12 +177,27 @@ export interface ScoreBuilderConfig {
   /** Copy name for Duplicate (Q67: "<Name>_copy(n)"). */
   duplicateName: (name: string, existingNames: string[]) => string;
   copy: {
+    /** First page tab and the table's accessible name. */
     pageTitle: string;
+    /** Accessible name of the table. */
     sectionTitle: string;
-    sectionDescription: string;
+    /** Second page tab (frame 01). Its content is not designed yet. */
+    auditLogs?: PendingControl;
+    /** Page action icons next to Create (frame 01, "Page actions (TBD)"). */
+    pageActions?: { tips?: PendingControl; more?: PendingControl };
+    /** The filter + plus button in the table toolbar. */
+    addFilter?: PendingControl;
+    /** The column chooser in the actions header. */
+    columns?: PendingControl;
+    /** Helper under Description (Q18). */
+    descriptionHelp?: string;
+    /** Tooltip of the ⓘ next to Description (frame 03). */
+    descriptionInfo?: string;
     banner?: { title: string; text: string };
     /** Breadcrumb in the builder header, e.g. ["Settings", "Brand Setup", "Score Builder"]. */
     breadcrumb: string[];
     howItWorks: string;
+    /** Example sentence in the object override rules card (I9), e.g. "Example: if the related Deal is not approved, force High Risk." */
+    objectOverrideExample?: string;
   };
 }

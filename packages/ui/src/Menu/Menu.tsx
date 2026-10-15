@@ -10,6 +10,8 @@ export interface MenuItem {
   destructive?: boolean;
   /** For single-choice menus (`selectable`): marks the current choice. */
   selected?: boolean;
+  /** Decorative trailing icon, e.g. an arrow on a "go to" item (DCF-0002 issues list). */
+  trailing?: ReactNode;
 }
 
 export interface MenuTriggerProps {
@@ -30,10 +32,12 @@ export interface MenuProps {
   /** Single-choice menu: items render as `menuitemradio` with a check on the selected one. */
   selectable?: boolean;
   align?: "start" | "end";
+  /** Visible section heading at the top of the list (FDS-101 Dropdown Menu header, e.g. "Fields"). */
+  heading?: ReactNode;
 }
 
 /** FDS-101 Dropdown Menu (345:67) + Menu Item (344:15). WAI-ARIA menu button pattern. */
-export function Menu({ label, items, renderTrigger, selectable, align = "end" }: MenuProps) {
+export function Menu({ label, items, renderTrigger, selectable, align = "end", heading }: MenuProps) {
   const id = useId();
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -107,6 +111,11 @@ export function Menu({ label, items, renderTrigger, selectable, align = "end" }:
     <span className="fx-menu" ref={wrapRef}>
       {trigger}
       <div role="menu" id={id} aria-label={label} className={`fx-menu__list fx-menu__list--${align}`} hidden={!open} onKeyDown={onMenuKey}>
+        {heading && (
+          <div role="presentation" className="fx-menu__heading">
+            {heading}
+          </div>
+        )}
         {items.map((item, i) => (
           <button
             key={item.id}
@@ -127,6 +136,11 @@ export function Menu({ label, items, renderTrigger, selectable, align = "end" }:
             }}
           >
             <span className="fx-menu__label">{item.label}</span>
+            {item.trailing && (
+              <span className="fx-menu__trailing" aria-hidden="true">
+                {item.trailing}
+              </span>
+            )}
             {selectable && item.selected && <Check className="fx-menu__check" aria-hidden="true" />}
           </button>
         ))}

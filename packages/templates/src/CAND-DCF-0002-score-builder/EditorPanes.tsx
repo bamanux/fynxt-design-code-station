@@ -1,21 +1,9 @@
-import {
-  Alert,
-  Badge,
-  Button,
-  ConditionBuilder,
-  IconButton,
-  MultiSelect,
-  NumberField,
-  SegmentedControl,
-  Select,
-  TextArea,
-  TextField,
-  Tooltip,
-  summarize,
-  type ConditionObject,
-} from "@fynxt/ui";
-import { ArrowDown, ArrowUp, Copy, Info, Plus, Trash2, Zap } from "lucide-react";
-import { attributeLabel, bandProblem, fieldOf, objectLabel, toNumber, wordCount } from "./model";
+import { Alert, Badge, Button, IconButton, MultiSelect, NumberField, SegmentedControl, Select, Spinner, TextArea, TextField, Tooltip, type ConditionObject } from "@fynxt/ui";
+import { Copy, GripVertical, Info, Plus, Trash2, X, Zap } from "lucide-react";
+import { useId, useState, type DragEvent, type KeyboardEvent } from "react";
+import { AttributePicker } from "./AttributePicker";
+import { AddConditionMenu, ConditionRows } from "./ConditionRows";
+import { attributeLabel, bandProblem, conditionsText, fieldOf, objectLabel, toNumber, wordCount } from "./model";
 import type { Band, Logic, OverrideRule, ScoreAttribute, ScoreBuilderConfig, ScoreModelInput, ScoreObjectGroup, ValueRow } from "./types";
 
 export const LOGIC_OPTIONS: { value: Logic; label: string }[] = [
@@ -28,8 +16,6 @@ export const logicWords = (logic: Logic | null) => (logic === "and" ? "All must 
 
 export const newId = () => (globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : `id-${Math.random().toString(36).slice(2)}`);
 
-const emptyConditions = () => ({ match: "all" as const, items: [] });
-
 interface PaneBase {
   config: ScoreBuilderConfig;
   schema: ConditionObject[];
@@ -39,15 +25,43 @@ interface PaneBase {
   update: (patch: Partial<ScoreModelInput>) => void;
 }
 
-/* ---------------------------------------------------------------- Details (Step 1) */
+/** Fields of an object not yet used as attributes (Add attribute). */
+export const unusedFields = (schema: ConditionObject[], g: ScoreObjectGroup) => (schema.find((o) => o.id === g.object)?.fields ?? []).filter((f) => !g.attributes.some((a) => a.field === f.id));
 
-export function DetailsPane({ config, schema, schemaStatus, onRetrySchema, input, update, showErrors }: PaneBase & { showErrors: boolean }) {
+function SchemaState({ status, onRetry }: { status: PaneBase["schemaStatus"]; onRetry: () => void }) {
+  if (status === "loading")
+    return (
+      <div className="fx-sb-state" role="status">
+        <Spinner />
+        <span>Loading fields…</span>
+      </div>
+    );
+  return (
+    <Alert
+      status="error"
+      title="Couldn't load CRM fields"
+      action={
+        <Button variant="secondary" size="s" onClick={onRetry}>
+          Retry
+        </Button>
+      }
+    />
+  );
+}
+
+/* ---------------------------------------------------------------- Details (Step 1) · frames 02–05 */
+
+export function DetailsPane({ config, schema, schemaStatus, onRetrySchema, input, update, showErrors, howItWorksOpen, onCloseHowItWorks }: PaneBase & { showErrors: boolean; howItWorksOpen: boolean; onCloseHowItWorks: () => void }) {
+  const hasConditions = input.appliesTo.items.length > 0;
   return (
     <>
-      <Alert status="info" title="How scoring works">
-        {config.copy.howItWorks}
-      </Alert>
-      <section className="fx-sb-card" aria-labelledby="fx-sb-details">
+      <p className="fx-sb-path">Model</p>
+      {howItWorksOpen && (
+        <Alert status="info" title="How scoring works" action={<IconButton variant="ghost" size="sm" label="Dismiss how scoring works" icon={<X />} onClick={onCloseHowItWorks} />}>
+          {config.copy.howItWorks}
+        </Alert>
+      )}
+      <section className="fx-sb-card fx-sb-card--form" aria-labelledby="fx-sb-details">
         <h2 id="fx-sb-details" className="fx-sb-card__title">
           Model details
         </h2>
@@ -60,11 +74,30 @@ export function DetailsPane({ config, schema, schemaStatus, onRetrySchema, input
           status={showErrors && !input.name.trim() ? "error" : undefined}
           helperText={showErrors && !input.name.trim() ? "Enter a name for this score model" : undefined}
         />
-        <TextArea label="Description" placeholder="About the score model" value={input.description} onChange={(e) => update({ description: e.target.value })} />
+        <TextArea
+          label={
+            config.copy.descriptionInfo ? (
+              <>
+                Description
+                <Tooltip content={config.copy.descriptionInfo}>
+                  <span className="fx-sb-info" tabIndex={0} aria-label="About the description">
+                    <Info aria-hidden="true" />
+                  </span>
+                </Tooltip>
+              </>
+            ) : (
+              "Description"
+            )
+          }
+          placeholder="About the score model"
+          value={input.description}
+          onChange={(e) => update({ description: e.target.value })}
+          helperText={config.copy.descriptionHelp}
+        />
       </section>
       <section className="fx-sb-card fx-sb-card--row" aria-labelledby="fx-sb-method">
         <div className="fx-sb-grow">
-          <h2 id="fx-sb-method" className="fx-sb-card__title">
+          <h2 id="fx-sb-method" className="fx-sb-card__title fx-sb-card__title--sm">
             Scoring method
           </h2>
           <p className="fx-sb-sub">Weighted: value score × attribute weight. Points: each value's points add up (max {config.weightTotal}).</p>
@@ -80,28 +113,33 @@ export function DetailsPane({ config, schema, schemaStatus, onRetrySchema, input
         />
       </section>
       <section className="fx-sb-card" aria-labelledby="fx-sb-applies">
-        <h2 id="fx-sb-applies" className="fx-sb-card__title">
+        <h2 id="fx-sb-applies" className="fx-sb-card__title fx-sb-card__title--sm">
           Applies to
+          <span className="fx-field__required" aria-hidden="true">
+            *
+          </span>
         </h2>
-        <ConditionBuilder
-          objects={schema}
-          operatorsByType={config.operatorsByType}
-          value={input.appliesTo}
-          onChange={(appliesTo) => update({ appliesTo })}
-          status={schemaStatus}
-          onRetry={onRetrySchema}
-          limits={config.limits}
-          showValidation={showErrors}
-          description="Score only records that match All or Any of these conditions."
-          emptyDescription="No conditions: every record of the selected objects is scored. Add a rule to narrow it down."
-          createId={newId}
-        />
+        <p className="fx-sb-sub">
+          {hasConditions
+            ? "Only records that match all these conditions are scored by this model."
+            : "No conditions yet, so every record of the selected objects is scored. Add conditions to narrow it down, e.g. User Type is Contact."}
+        </p>
+        {schemaStatus !== "ready" ? (
+          <SchemaState status={schemaStatus} onRetry={onRetrySchema} />
+        ) : (
+          <div className="fx-sb-condbox">
+            <ConditionRows label="Applies to" schema={schema} operatorsByType={config.operatorsByType} value={{ ...input.appliesTo, match: "all" }} onChange={(appliesTo) => update({ appliesTo })} showErrors={showErrors} />
+            <div className="fx-sb-condbox__foot">
+              <AddConditionMenu label="Applies to" schema={schema} operatorsByType={config.operatorsByType} value={{ ...input.appliesTo, match: "all" }} onChange={(appliesTo) => update({ appliesTo })} createId={newId} />
+            </div>
+          </div>
+        )}
       </section>
     </>
   );
 }
 
-/* ---------------------------------------------------------------- Override rules (attribute / object) */
+/* ---------------------------------------------------------------- Override rules (attribute / object) · frames 16–21 */
 
 export function OverrideRules({
   config,
@@ -113,74 +151,75 @@ export function OverrideRules({
   objectId,
   attributeId,
   title,
+  description,
   showErrors,
-}: PaneBase & { objectId: string; attributeId?: string; title: string; showErrors: boolean }) {
+}: PaneBase & { objectId: string; attributeId?: string; title: string; description: string; showErrors: boolean }) {
   const mine = input.overrides.filter((o) => o.objectId === objectId && o.attributeId === attributeId);
   const bands = input.bands.filter((b) => b.label.trim());
   const set = (id: string, patch: Partial<OverrideRule>) => update({ overrides: input.overrides.map((o) => (o.id === id ? { ...o, ...patch } : o)) });
+  const group = input.objects.find((g) => g.id === objectId);
+  const attribute = group?.attributes.find((a) => a.id === attributeId);
+
+  function addRule() {
+    // Start from this object (and attribute's field) so the rule reads "If Contact Country …" (frame 17).
+    const object = group?.object ?? "";
+    const field = attribute ? fieldOf(schema, object, attribute.field) : undefined;
+    const condition = field ? (config.operatorsByType[field.type]?.[0]?.id ?? "") : "";
+    const rule = { kind: "rule" as const, id: newId(), object, field: field?.id ?? "", fieldLabel: field?.label, condition, value: null };
+    update({ overrides: [...input.overrides, { id: newId(), objectId, attributeId, conditions: { match: "all", items: [rule] }, outcome: { type: "", value: "" } }] });
+  }
+
   return (
     <section className="fx-sb-card" aria-label={title}>
       <div className="fx-sb-card__head">
         <Zap className="fx-sb-icon" aria-hidden="true" />
-        <h2 className="fx-sb-card__title">{title}</h2>
+        <h2 className="fx-sb-card__title fx-sb-card__title--sm">{title}</h2>
         <Badge status={mine.length ? "warning" : "neutral"}>{mine.length ? `${mine.length} ${mine.length === 1 ? "rule" : "rules"}` : "Optional"}</Badge>
       </div>
-      <p className="fx-sb-sub">When a rule matches, it replaces the result: force a band, set a score, reject, or refer to compliance.</p>
-      {mine.map((o, i) => {
-        const needsBand = o.outcome.type === "forceBand" || o.outcome.type === "atLeastBand";
-        const missing = showErrors && (!o.outcome.type || ((needsBand || o.outcome.type === "setScore") && !o.outcome.value));
-        return (
-          <div key={o.id} className="fx-sb-rule" aria-label={`Override rule ${i + 1}`} role="group">
-            <ConditionBuilder
-              objects={schema}
-              operatorsByType={config.operatorsByType}
-              value={o.conditions}
-              onChange={(conditions) => set(o.id, { conditions })}
-              status={schemaStatus}
-              onRetry={onRetrySchema}
-              limits={config.limits}
-              showValidation={showErrors}
-              description="If these conditions match:"
-              emptyDescription="Add a rule, e.g. Deal › Approval status is not Approved."
-              createId={newId}
-            />
-            <div className="fx-sb-rule__then">
-              <span className="fx-sb-rule__word">Then</span>
-              <Select
-                label={`Outcome of rule ${i + 1}`}
-                hideLabel
-                placeholder="Choose outcome"
-                options={config.outcomeTypes}
-                value={o.outcome.type}
-                onChange={(e) => set(o.id, { outcome: { type: e.target.value as OverrideRule["outcome"]["type"], value: "" } })}
-                status={showErrors && !o.outcome.type ? "error" : undefined}
-              />
-              {needsBand && (
+      <p className="fx-sb-sub">{description}</p>
+      {schemaStatus !== "ready" && mine.length > 0 && <SchemaState status={schemaStatus} onRetry={onRetrySchema} />}
+      {schemaStatus === "ready" &&
+        mine.map((o) => {
+          const n = input.overrides.indexOf(o) + 1;
+          const needsBand = o.outcome.type === "forceBand" || o.outcome.type === "atLeastBand";
+          const missing = showErrors && (!o.outcome.type || ((needsBand || o.outcome.type === "setScore") && !o.outcome.value));
+          return (
+            <div key={o.id} className="fx-sb-rule" aria-label={`Override rule ${n}`} role="group">
+              <ConditionRows label={`Override rule ${n}`} schema={schema} operatorsByType={config.operatorsByType} value={o.conditions} onChange={(conditions) => set(o.id, { conditions })} withObject lead="If" removable={o.conditions.items.length > 1} showErrors={showErrors} />
+              <div className="fx-sb-rule__then">
+                <span className="fx-sb-rule__word">Then</span>
                 <Select
-                  label={`Band for rule ${i + 1}`}
+                  label={`Outcome of rule ${n}`}
                   hideLabel
-                  placeholder="Choose band"
-                  options={bands.map((b) => ({ value: b.id, label: b.label }))}
-                  value={o.outcome.value}
-                  onChange={(e) => set(o.id, { outcome: { ...o.outcome, value: e.target.value } })}
-                  status={missing ? "error" : undefined}
+                  placeholder="Choose outcome"
+                  options={config.outcomeTypes}
+                  value={o.outcome.type}
+                  onChange={(e) => set(o.id, { outcome: { type: e.target.value as OverrideRule["outcome"]["type"], value: "" } })}
+                  status={showErrors && !o.outcome.type ? "error" : undefined}
+                  helperText={showErrors && !o.outcome.type ? "Choose what this rule does" : undefined}
                 />
-              )}
-              {o.outcome.type === "setScore" && (
-                <NumberField label={`Score for rule ${i + 1}`} hideLabel value={o.outcome.value} onChange={(e) => set(o.id, { outcome: { ...o.outcome, value: e.target.value } })} status={missing ? "error" : undefined} />
-              )}
-              <IconButton variant="ghost" size="sm" label={`Remove override rule ${i + 1}`} icon={<Trash2 />} onClick={() => update({ overrides: input.overrides.filter((x) => x.id !== o.id) })} />
+                {needsBand && (
+                  <Select
+                    label={`Band for rule ${n}`}
+                    hideLabel
+                    placeholder="Choose band"
+                    options={bands.map((b) => ({ value: b.id, label: b.label }))}
+                    value={o.outcome.value}
+                    onChange={(e) => set(o.id, { outcome: { ...o.outcome, value: e.target.value } })}
+                    status={missing && o.outcome.type ? "error" : undefined}
+                  />
+                )}
+                {o.outcome.type === "setScore" && (
+                  <NumberField label={`Score for rule ${n}`} hideLabel value={o.outcome.value} onChange={(e) => set(o.id, { outcome: { ...o.outcome, value: e.target.value } })} status={missing ? "error" : undefined} />
+                )}
+                <span className="fx-sb-grow" />
+                <IconButton variant="ghost" size="sm" label={`Remove override rule ${n}`} icon={<Trash2 />} onClick={() => update({ overrides: input.overrides.filter((x) => x.id !== o.id) })} />
+              </div>
             </div>
-            {missing && <Alert status="error" title="Choose what this rule does" />}
-          </div>
-        );
-      })}
+          );
+        })}
       <div>
-        <Button
-          variant="secondary"
-          leadingIcon={<Plus />}
-          onClick={() => update({ overrides: [...input.overrides, { id: newId(), objectId, attributeId, conditions: emptyConditions(), outcome: { type: "", value: "" } }] })}
-        >
+        <Button variant="secondary" size="s" leadingIcon={<Plus />} onClick={addRule} disabled={schemaStatus !== "ready"}>
           Add override
         </Button>
       </div>
@@ -188,10 +227,10 @@ export function OverrideRules({
   );
 }
 
-/* ---------------------------------------------------------------- Object */
+/* ---------------------------------------------------------------- Object · frames 07–09, 19–21, 38 */
 
-export function ObjectPane(props: PaneBase & { group: ScoreObjectGroup; showErrors: boolean; onLogic: (logic: Logic) => void }) {
-  const { schema, group, onLogic, showErrors } = props;
+export function ObjectPane(props: PaneBase & { group: ScoreObjectGroup; showErrors: boolean; onLogic: (logic: Logic) => void; onAddAttributes: (fieldIds: string[]) => void }) {
+  const { config, schema, schemaStatus, group, onLogic, onAddAttributes, showErrors } = props;
   const name = objectLabel(schema, group.object);
   return (
     <>
@@ -206,17 +245,30 @@ export function ObjectPane(props: PaneBase & { group: ScoreObjectGroup; showErro
         <div className="fx-sb-card--row">
           <div className="fx-sb-grow">
             <p className="fx-sb-strong">Join {name} attributes with</p>
-            <p className="fx-sb-sub">One operator joins all attributes of this object. {logicWords(group.logic)}.</p>
+            <p className="fx-sb-sub">One operator joins all attributes of this object.</p>
           </div>
           <SegmentedControl label={`Join ${name} attributes with`} options={LOGIC_OPTIONS} value={group.logic} onChange={onLogic} invalid={showErrors && group.attributes.length > 1 && !group.logic} />
         </div>
       </section>
-      <OverrideRules {...props} objectId={group.id} title={`${name} override rules`} />
+      {group.attributes.length === 0 ? (
+        <section className="fx-sb-empty" aria-label={`${name} attributes`}>
+          <p className="fx-sb-strong">No attributes yet</p>
+          <p className="fx-sb-sub">Pick a field of {name} to score.</p>
+          <AttributePicker objectName={name} fields={unusedFields(schema, group)} onAdd={onAddAttributes} variant="primary" disabled={schemaStatus !== "ready"} align="center" />
+        </section>
+      ) : (
+        <OverrideRules
+          {...props}
+          objectId={group.id}
+          title={`${name} override rules`}
+          description={`When a rule matches, it replaces the ${name} result: force a band or set a score.${config.copy.objectOverrideExample ? ` ${config.copy.objectOverrideExample}` : ""}`}
+        />
+      )}
     </>
   );
 }
 
-/* ---------------------------------------------------------------- Attribute */
+/* ---------------------------------------------------------------- Attribute · frames 10–18, 36, 39 */
 
 export function AttributePane(
   props: PaneBase & {
@@ -229,6 +281,7 @@ export function AttributePane(
   }
 ) {
   const { config, schema, group, attribute: a, input, onChange, onDuplicate, onDistribute, showErrors } = props;
+  const weightId = useId();
   const field = fieldOf(schema, group.object, a.field);
   const type = field?.type;
   const label = attributeLabel(schema, group.object, a);
@@ -244,6 +297,8 @@ export function AttributePane(
   };
   const otherTotal = group.attributes.filter((x) => x.id !== a.id).reduce((s, x) => s + (toNumber(x.weight) ?? 0), 0);
   const total = otherTotal + (weight ?? 0);
+  const weightInvalid = (showErrors && weight === null) || total > config.weightTotal;
+  const unit = points ? "pts" : "%";
 
   return (
     <>
@@ -265,22 +320,36 @@ export function AttributePane(
           </h2>
           <Badge status="neutral">{type === "number" ? "Number" : type === "list" ? "Dropdown" : (type ?? "Field")}</Badge>
           <span className="fx-sb-grow" />
-          <div className="fx-sb-weight">
-            <NumberField
-              label={points ? "Max points" : "Weight %"}
-              min={0}
-              max={config.weightTotal}
-              value={a.weight}
-              onChange={(e) => onChange({ ...a, weight: e.target.value })}
-              status={(showErrors && weight === null) || total > config.weightTotal ? "error" : undefined}
-              helperText={
-                total !== config.weightTotal
-                  ? `${objectLabel(schema, group.object)} total ${total}${points ? " pts" : "%"} · ${total > config.weightTotal ? `${total - config.weightTotal} over` : `${config.weightTotal - total} left`}`
-                  : undefined
-              }
-            />
+          {/* FDS-101 Input Addon (Unit = Percentage): inline label, grey control, unit segment. */}
+          <div className="fx-sb-weight" data-status={weightInvalid ? "error" : undefined}>
+            <label htmlFor={weightId} className="fx-sb-weight__label">
+              {points ? "Max points" : "Weight"}
+            </label>
+            <div className="fx-sb-addon">
+              <input
+                id={weightId}
+                className="fx-sb-addon__input"
+                type="number"
+                inputMode="decimal"
+                min={0}
+                max={config.weightTotal}
+                placeholder="0"
+                value={a.weight}
+                aria-invalid={weightInvalid || undefined}
+                aria-describedby={total !== config.weightTotal ? `${weightId}-help` : undefined}
+                onChange={(e) => onChange({ ...a, weight: e.target.value })}
+              />
+              <span className="fx-sb-addon__unit" aria-hidden="true">
+                {unit}
+              </span>
+            </div>
           </div>
         </div>
+        {total !== config.weightTotal && (
+          <p id={`${weightId}-help`} className="fx-sb-weight__help" data-status={total > config.weightTotal ? "error" : undefined}>
+            {`${objectLabel(schema, group.object)} total ${total}${points ? " pts" : "%"} · ${total > config.weightTotal ? `${total - config.weightTotal} over` : `${config.weightTotal - total} left`}`}
+          </p>
+        )}
         <p className="fx-sb-sub">
           Group values as {config.categories.join(" / ")}; add as many as you need. {points ? "Each value's points are added to the total." : "Contribution = score × weight."}
         </p>
@@ -338,7 +407,7 @@ export function AttributePane(
                         </>
                       ) : (
                         <td>
-                          <MultiSelect label={`Values, row ${n}`} hideLabel placeholder="Select options" options={field?.options ?? []} value={row.values} onChange={(values) => setRow(row.id, { values })} status={showErrors && !row.values.length ? "error" : undefined} />
+                          <MultiSelect label={`Values, row ${n}`} hideLabel maxChips={1} placeholder="Select options" options={field?.options ?? []} value={row.values} onChange={(values) => setRow(row.id, { values })} status={showErrors && !row.values.length ? "error" : undefined} />
                         </td>
                       )}
                       <td>
@@ -361,12 +430,23 @@ export function AttributePane(
           </div>
         )}
       </section>
-      <OverrideRules {...props} objectId={group.id} attributeId={a.id} title={`${label} override rules`} />
+      <OverrideRules {...props} objectId={group.id} attributeId={a.id} title={`${label} override rules`} description="When a rule matches, it replaces the result: force a band or set a score." />
     </>
   );
 }
 
-/* ---------------------------------------------------------------- Outcome bands (Step 3) */
+/* ---------------------------------------------------------------- Outcome bands (Step 3) · frames 30, 31, 37, 54 */
+
+/** Edge sentence for a band (R26): "Up to and including" / "Above 55, up to and including" / "Above". */
+function edgeLabels(prev: Band | undefined) {
+  const prevUpTo = prev ? toNumber(prev.upTo) : null;
+  const from = prevUpTo === null ? "" : prev?.inclusive === false ? `From ${prevUpTo}, ` : `Above ${prevUpTo}, `;
+  return {
+    inclusive: from ? `${from}up to and including` : "Up to and including",
+    exclusive: from ? `${from}below` : "Below",
+    open: prevUpTo === null ? "Any score" : prev?.inclusive === false ? "From" : "Above",
+  };
+}
 
 export function BandsPane({ config, input, update, showErrors }: Pick<PaneBase, "config" | "input" | "update"> & { showErrors: boolean }) {
   const problem = bandProblem(input.bands);
@@ -383,16 +463,37 @@ export function BandsPane({ config, input, update, showErrors }: Pick<PaneBase, 
         {problem && input.bands.length > 0 && (showErrors || problem.startsWith("Bands overlap")) && <Alert status="error" title={problem.startsWith("Bands overlap") ? "Bands overlap" : problem}>{problem.startsWith("Bands overlap") ? problem : undefined}</Alert>}
         {input.bands.map((b, i) => {
           const last = i === input.bands.length - 1;
-          const prev = i > 0 ? toNumber(input.bands[i - 1]!.upTo) : null;
+          const prev = i > 0 ? input.bands[i - 1] : undefined;
+          const labels = edgeLabels(prev);
           const words = wordCount(b.description);
           const n = i + 1;
           return (
             <div key={b.id} className="fx-sb-band-row" role="group" aria-label={`Band ${n}`}>
               <div className="fx-sb-band-row__line">
                 <span className="fx-sb-rule__word">Score</span>
-                <span className="fx-sb-band-row__edge">{last ? (prev === null ? "Any score" : `Above ${prev}`) : prev === null ? "Up to and including" : `Above ${prev}, up to and including`}</span>
-                {!last && <NumberField label={`Band ${n} upper limit`} hideLabel min={0} max={config.weightTotal} value={b.upTo} onChange={(e) => set(b.id, { upTo: e.target.value })} />}
-                <span aria-hidden="true">→</span>
+                {last ? (
+                  <>
+                    <Select label={`Band ${n} edge`} hideLabel options={[{ value: "open", label: labels.open }]} value="open" onChange={() => {}} />
+                    {prev && <NumberField label={`Band ${n} starts after`} hideLabel value={prev.upTo} readOnly />}
+                  </>
+                ) : (
+                  <>
+                    <Select
+                      label={`Band ${n} edge`}
+                      hideLabel
+                      options={[
+                        { value: "incl", label: labels.inclusive },
+                        { value: "excl", label: labels.exclusive },
+                      ]}
+                      value={b.inclusive === false ? "excl" : "incl"}
+                      onChange={(e) => set(b.id, { inclusive: e.target.value !== "excl" })}
+                    />
+                    <NumberField label={`Band ${n} upper limit`} hideLabel min={0} max={config.weightTotal} value={b.upTo} onChange={(e) => set(b.id, { upTo: e.target.value })} status={showErrors && toNumber(b.upTo) === null ? "error" : undefined} />
+                  </>
+                )}
+                <span className="fx-sb-arrow" aria-hidden="true">
+                  →
+                </span>
                 <TextField label={`Band ${n} label`} hideLabel placeholder="Band label, e.g. Low Risk" value={b.label} onChange={(e) => set(b.id, { label: e.target.value })} status={showErrors && !b.label.trim() ? "error" : undefined} />
                 {b.description.trim() ? (
                   <Tooltip content={b.description}>
@@ -415,8 +516,8 @@ export function BandsPane({ config, input, update, showErrors }: Pick<PaneBase, 
             </div>
           );
         })}
-        <div>
-          <Button variant="ghost" leadingIcon={<Plus />} onClick={() => update({ bands: [...input.bands, { id: newId(), upTo: "", label: "", description: "" }] })}>
+        <div className="fx-sb-end">
+          <Button size="s" leadingIcon={<Plus />} onClick={() => update({ bands: [...input.bands, { id: newId(), upTo: "", label: "", description: "", inclusive: true }] })}>
             Add band
           </Button>
         </div>
@@ -425,14 +526,26 @@ export function BandsPane({ config, input, update, showErrors }: Pick<PaneBase, 
   );
 }
 
-/* ---------------------------------------------------------------- All overrides (Step 3) */
+/* ---------------------------------------------------------------- All overrides (Step 3) · frame 32 */
 
 export function OverridesPane({ config, schema, input, update, onOpen }: Pick<PaneBase, "config" | "schema" | "input" | "update"> & { onOpen: (o: OverrideRule) => void }) {
-  const move = (i: number, d: -1 | 1) => {
+  const [dragging, setDragging] = useState<number | null>(null);
+  const [announce, setAnnounce] = useState("");
+  const move = (from: number, to: number) => {
+    if (to < 0 || to >= input.overrides.length || from === to) return;
     const next = [...input.overrides];
-    const [x] = next.splice(i, 1);
-    next.splice(i + d, 0, x!);
+    const [x] = next.splice(from, 1);
+    next.splice(to, 0, x!);
     update({ overrides: next });
+    setAnnounce(`Rule moved to position ${to + 1} of ${next.length}`);
+  };
+  const onGripKey = (i: number) => (e: KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+      e.preventDefault();
+      const to = e.key === "ArrowUp" ? i - 1 : i + 1;
+      move(i, to);
+      requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(`[data-grip="${to}"]`)?.focus());
+    }
   };
   const scope = (o: OverrideRule) => {
     const g = input.objects.find((x) => x.id === o.objectId);
@@ -451,31 +564,53 @@ export function OverridesPane({ config, schema, input, update, onOpen }: Pick<Pa
       <section className="fx-sb-card" aria-labelledby="fx-sb-overrides">
         <div className="fx-sb-card__head">
           <Zap className="fx-sb-icon" aria-hidden="true" />
-          <h2 id="fx-sb-overrides" className="fx-sb-card__title fx-sb-card__title--lg">
+          <h2 id="fx-sb-overrides" className="fx-sb-card__title fx-sb-card__title--sm">
             All override rules
           </h2>
           <Badge status={input.overrides.length ? "warning" : "neutral"}>{`${input.overrides.length} ${input.overrides.length === 1 ? "rule" : "rules"}`}</Badge>
         </div>
-        <p className="fx-sb-sub">Rules are checked in this order. Which rule wins when several match is still to be confirmed.</p>
+        <p className="fx-sb-sub">Rules are checked in this order; drag to reorder. Which rule wins when several match is still to be confirmed.</p>
         {input.overrides.length === 0 && <p className="fx-sb-sub">No override rules. Add them on an object or attribute.</p>}
         <ol className="fx-sb-ordered">
           {input.overrides.map((o, i) => (
-            <li key={o.id} className="fx-sb-ordered__item">
-              <span className="fx-sb-strong">{i + 1}</span>
+            <li
+              key={o.id}
+              className="fx-sb-ordered__item"
+              data-dragging={dragging === i || undefined}
+              onDragOver={(e: DragEvent) => dragging !== null && e.preventDefault()}
+              onDrop={() => {
+                if (dragging !== null) move(dragging, i);
+                setDragging(null);
+              }}
+            >
+              <button
+                type="button"
+                className="fx-sb-grip"
+                data-grip={i}
+                draggable
+                aria-label={`Reorder rule ${i + 1}. Use arrow up or down to move.`}
+                onDragStart={() => setDragging(i)}
+                onDragEnd={() => setDragging(null)}
+                onKeyDown={onGripKey(i)}
+              >
+                <GripVertical aria-hidden="true" />
+              </button>
+              <span className="fx-sb-ordered__n">{i + 1}</span>
               <span className="fx-sb-stack fx-sb-grow">
-                <span>
-                  If {summarize(o.conditions, schema, config.operatorsByType) || "…"} → {outcome(o)}
+                <span className="fx-sb-ordered__text">
+                  If {conditionsText(o.conditions, schema, config.operatorsByType, "sentence", input.objects.find((g) => g.id === o.objectId)?.object) || "…"} → {outcome(o)}
                 </span>
                 <span className="fx-sb-sub">{scope(o)}</span>
               </span>
-              <IconButton variant="ghost" size="sm" label={`Move rule ${i + 1} up`} icon={<ArrowUp />} disabled={i === 0} onClick={() => move(i, -1)} />
-              <IconButton variant="ghost" size="sm" label={`Move rule ${i + 1} down`} icon={<ArrowDown />} disabled={i === input.overrides.length - 1} onClick={() => move(i, 1)} />
               <Button variant="ghost" size="s" onClick={() => onOpen(o)}>
                 Edit
               </Button>
             </li>
           ))}
         </ol>
+        <p className="fx-visually-hidden" aria-live="polite">
+          {announce}
+        </p>
       </section>
     </>
   );

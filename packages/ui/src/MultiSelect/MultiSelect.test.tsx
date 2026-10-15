@@ -65,4 +65,13 @@ describe("MultiSelect · hideLabel (DCF-0002)", () => {
     expect(screen.getByRole("combobox", { name: "Values, row 1" })).toBeInTheDocument();
     expect(screen.getByText("Values, row 1")).toHaveClass("fx-visually-hidden");
   });
+  it("collapses extra chips into a +N count until the list opens (maxChips)", async () => {
+    const { container } = render(<MultiSelect label="Values" options={users} value={["u1", "u2", "u3"]} onChange={() => {}} maxChips={1} />);
+    const chips = () => [...container.querySelectorAll(".fx-chip__label")].map((c) => c.textContent);
+    expect(chips()).toEqual(["John Smith"]);
+    expect(screen.getByText("+2")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("combobox", { name: "Values" }));
+    expect(screen.queryByText("+2")).not.toBeInTheDocument();
+    expect(chips()).toEqual(["John Smith", "Jane Doe", "Asha Kumar"]);
+  });
 });

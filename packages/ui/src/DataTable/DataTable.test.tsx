@@ -18,4 +18,11 @@ describe("DataTable", () => {
     render(<DataTable caption="Blocked participants" columns={columns} rows={[]} getRowId={(r) => r.id} empty="No blocked participants" />);
     expect(screen.getByRole("cell", { name: "No blocked participants" })).toHaveAttribute("colspan", "2");
   });
+  it("renders a trailing header control next to the label", () => {
+    const withAction = [{ ...columns[0]!, headerAction: <button type="button">Name options</button> }, columns[1]!];
+    render(<DataTable caption="Blocked participants" columns={withAction} rows={[]} getRowId={(r) => r.id} />);
+    const header = screen.getAllByRole("columnheader")[0]!;
+    expect(within(header).getByText("Participant")).toBeInTheDocument();
+    expect(within(header).getByRole("button", { name: "Name options" })).toBeInTheDocument();
+  });
 });

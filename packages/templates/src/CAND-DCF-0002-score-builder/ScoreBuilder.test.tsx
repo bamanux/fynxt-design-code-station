@@ -39,7 +39,7 @@ function config(models: ScoreModel[] = [completeModel()], over: Partial<ScoreBui
     descriptionMaxWords: 250,
     weightTotal: 100,
     duplicateName: defaultDuplicateName,
-    copy: { pageTitle: "Score Builder", sectionTitle: "All score models", sectionDescription: "Weighted scores for CRM objects", breadcrumb: ["Settings", "Brand Setup", "Score Builder"], howItWorks: "Add objects and their attributes." },
+    copy: { pageTitle: "Score Builder", sectionTitle: "All score models", breadcrumb: ["Settings", "Brand Setup", "Score Builder"], howItWorks: "Add objects and their attributes." },
     ...rest,
   };
 }
@@ -52,7 +52,7 @@ describe("Score Builder list (DCF-0002 P2)", () => {
     const t = await table();
     const row = within(t).getByRole("row", { name: /Client Risk Score/ });
     expect(row).toHaveTextContent("Contact");
-    expect(row).toHaveTextContent("Contact › User Type is Contact");
+    expect(row).toHaveTextContent("User Type = Contact");
     expect(within(row).getByRole("switch", { name: "Client Risk Score active" })).toHaveAttribute("aria-checked", "true");
     (within(row).getByText("Low Risk").closest("span[tabindex]") as HTMLElement).focus();
     expect(await screen.findByRole("tooltip")).toHaveTextContent("Standard due diligence.");
@@ -89,11 +89,27 @@ describe("Score Builder list (DCF-0002 P2)", () => {
   it("filters by object and shows a no-results state for search", async () => {
     render(<ScoreBuilder config={config()} />);
     await table();
-    await userEvent.selectOptions(screen.getByRole("combobox", { name: "Object" }), "deal");
+    await userEvent.click(screen.getByRole("button", { name: "Object" }));
+    await userEvent.click(screen.getByRole("menuitemradio", { name: "Deal" }));
     expect(await screen.findByText("No score models match these filters")).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Clear all" }));
+    expect(screen.getByRole("button", { name: "Object: Deal" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Clear All" }));
     await userEvent.type(screen.getByRole("searchbox", { name: "Search score models" }), "credit");
     expect(await screen.findByText("No score models match “credit”")).toBeInTheDocument();
+  });
+
+  it("sorts from the column menu and pages the rows (frame 01)", async () => {
+    const models = Array.from({ length: 12 }, (_, i) => completeModel({ id: `m${i}`, code: String(3000 + i), name: `Model ${String(i).padStart(2, "0")}` }));
+    render(<ScoreBuilder config={config(models)} />);
+    const t = await table();
+    expect(within(t).getAllByRole("row")).toHaveLength(11); // header + 10 rows per page
+    expect(screen.getByText("1–10 of 12")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Next page" }));
+    expect(screen.getByText("11–12 of 12")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Name column options" }));
+    await userEvent.click(screen.getByRole("menuitemradio", { name: "Sort descending" }));
+    await userEvent.click(screen.getByRole("button", { name: "Page 1" }));
+    expect(within(await table()).getAllByRole("row")[1]).toHaveTextContent("Model 11");
   });
 });
 
@@ -115,7 +131,7 @@ describe("Score Builder editor (DCF-0002 P1)", () => {
     await userEvent.click(within(screen.getByRole("main", { name: "Editor" })).getByRole("radio", { name: "AND" }));
 
     // Add two attributes at once.
-    await userEvent.click(screen.getByRole("button", { name: "Add attribute" }));
+    await userEvent.click(within(screen.getByRole("main", { name: "Editor" })).getByRole("button", { name: "Add attribute" }));
     const dialog = screen.getByRole("dialog", { name: "Add Contact attributes" });
     await userEvent.click(within(dialog).getByRole("checkbox", { name: "Country" }));
     await userEvent.click(within(dialog).getByRole("checkbox", { name: "Occupation" }));
@@ -132,7 +148,7 @@ describe("Score Builder editor (DCF-0002 P1)", () => {
 
     // Distribute evenly sets 50 / 50 and the contribution updates live (R10).
     await userEvent.click(screen.getAllByRole("button", { name: "Distribute evenly" })[0]!);
-    expect(screen.getByRole("spinbutton", { name: "Weight %" })).toHaveValue(50);
+    expect(screen.getByRole("spinbutton", { name: "Weight" })).toHaveValue(50);
     expect(within(screen.getByRole("table", { name: "Country values" })).getByText("5.0")).toBeInTheDocument();
 
     // Occupation.
@@ -187,12 +203,50 @@ describe("Score Builder editor (DCF-0002 P1)", () => {
   it("keeps changes after a failed save and retries", async () => {
     const onClose = vi.fn();
     render(<ScoreEditor config={config([completeModel()], { failNextSave: true })} modelId="m2001" onClose={onClose} />);
-    await userEvent.type(await screen.findByRole("textbox", { name: /Score model name/ }), " v2");
+    // Frame 35: an existing model opens on its first attribute.
+    expect(await screen.findByRole("heading", { name: "Country" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Details & scope" }));
+    await userEvent.type(screen.getByRole("textbox", { name: /Score model name/ }), " v2");
     await userEvent.click(screen.getByRole("button", { name: "Save score model" }));
     expect(await screen.findByText("Couldn't save the score model")).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: /Score model name/ })).toHaveValue("Client Risk Score v2");
     await userEvent.click(screen.getByRole("button", { name: "Retry" }));
     await waitFor(() => expect(onClose).toHaveBeenCalledWith("Score model “Client Risk Score v2” saved"));
+  });
+
+  it("adds an Applies to condition from the Fields menu (frames 04–05)", async () => {
+    render(<ScoreEditor config={config()} onClose={() => {}} />);
+    expect(screen.getByText(/No conditions yet, so every record/)).toBeInTheDocument();
+    await userEvent.click(await screen.findByRole("button", { name: "Add condition" }));
+    expect(screen.getByText("Fields")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("menuitem", { name: "Country" }));
+    const row = screen.getByRole("group", { name: "Applies to, condition 1" });
+    expect(within(row).getByRole("combobox", { name: "Applies to, condition 1 field" })).toHaveValue("contact:country");
+    expect(screen.getByText("Only records that match all these conditions are scored by this model.")).toBeInTheDocument();
+    await userEvent.click(within(row).getByRole("button", { name: "Remove Applies to, condition 1" }));
+    expect(screen.queryByRole("group", { name: "Applies to, condition 1" })).not.toBeInTheDocument();
+  });
+
+  it("shows one issue with its area and a heading in the issues list (frames 27–28)", async () => {
+    const m = completeModel();
+    render(<ScoreEditor config={config([m])} modelId="m2001" onClose={() => {}} />);
+    await screen.findByRole("heading", { name: "Country" });
+    await userEvent.click(screen.getByRole("button", { name: "Outcome bands" }));
+    await userEvent.clear(screen.getByRole("textbox", { name: "Band 1 label" }));
+    await userEvent.click(screen.getByRole("button", { name: "1 issue · outcome bands" }));
+    expect(screen.getByText("1 issue to fix before saving")).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Give band 1 a label" })).toBeInTheDocument();
+  });
+
+  it("starts an attribute override from that attribute and offers band outcomes (frames 16–18)", async () => {
+    render(<ScoreEditor config={config()} modelId="m2001" onClose={() => {}} />);
+    await screen.findByRole("heading", { name: "Country" });
+    await userEvent.click(screen.getByRole("button", { name: "Add override" }));
+    const rule = screen.getByRole("group", { name: "Override rule 1" });
+    expect(within(rule).getByRole("combobox", { name: "Override rule 1, condition 1 object" })).toHaveValue("contact");
+    expect(within(rule).getByRole("combobox", { name: "Override rule 1, condition 1 field" })).toHaveValue("country");
+    await userEvent.selectOptions(within(rule).getByRole("combobox", { name: "Outcome of rule 1" }), "forceBand");
+    expect(within(rule).getByRole("combobox", { name: "Band for rule 1" })).toBeInTheDocument();
   });
 
   it("shows a not-found state for a missing model", async () => {

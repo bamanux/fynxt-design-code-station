@@ -12,7 +12,7 @@ describe("Gallery page: Settings › Brand Setup › Score Builder (DCF-0002)", 
     const row = within(table).getByRole("row", { name: /Client Risk Score/ });
     expect(row).toHaveTextContent("Low Risk");
 
-    await userEvent.click(within(table).getByRole("button", { name: "Client Risk Score" }));
+    await userEvent.click(within(table).getByRole("button", { name: "View Client Risk Score" }));
     expect(await screen.findByRole("navigation", { name: "Model outline" }, { timeout: 3000 })).toBeInTheDocument();
     expect(screen.queryByRole("navigation", { name: "Main" })).not.toBeInTheDocument();
     expect(await screen.findByRole("button", { name: /^Country/ }, { timeout: 3000 })).toBeInTheDocument();

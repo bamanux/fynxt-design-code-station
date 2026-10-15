@@ -177,7 +177,7 @@ export function SideNav({
   const showSettingsMenu = Boolean(settings) && mode === "settings";
   const backButton = (
     <button type="button" className={collapsed ? "fx-sidenav__rail-item" : "fx-sidenav__back"} aria-label="Back to main menu" title="Back to main menu" onClick={() => setMode("main")}>
-      <ArrowLeft aria-hidden="true" />
+      {collapsed ? <ArrowLeft aria-hidden="true" /> : <ChevronLeft aria-hidden="true" />}
     </button>
   );
 

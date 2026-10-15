@@ -3,15 +3,24 @@ import type { ReactNode } from "react";
 export interface TopNavProps {
   /** Page title (h1). */
   title: string;
+  /** Next to the title, e.g. the FDS-101 Top Nav help icon (DCF-0002). */
+  titleAdornment?: ReactNode;
   /** Right-side controls: settings, notifications, language, avatar (FDS-101 Top Nav toggles). */
   actions?: ReactNode;
 }
 
 /** FDS-101 Top Nav (141:117), Desktop: page title + global actions. */
-export function TopNav({ title, actions }: TopNavProps) {
+export function TopNav({ title, titleAdornment, actions }: TopNavProps) {
   return (
     <header className="fx-topnav">
-      <h1 className="fx-topnav__title">{title}</h1>
+      {titleAdornment ? (
+        <div className="fx-topnav__heading">
+          <h1 className="fx-topnav__title">{title}</h1>
+          {titleAdornment}
+        </div>
+      ) : (
+        <h1 className="fx-topnav__title">{title}</h1>
+      )}
       {actions && <div className="fx-topnav__actions">{actions}</div>}
     </header>
   );

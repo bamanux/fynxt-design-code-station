@@ -102,7 +102,22 @@ const models: ScoreModel[] = [
       { id: "b2", upTo: "70", label: "Medium Risk", description: "Enhanced checks on source of funds. Review yearly." },
       { id: "b3", upTo: "", label: "High Risk", description: "Senior approval and enhanced due diligence before onboarding." },
     ],
-    overrides: [],
+    // Frame 32 / 35: two override rules (I9). Which rule wins is open (Q52).
+    overrides: [
+      {
+        id: "o1",
+        objectId: "g1",
+        attributeId: "a1",
+        conditions: { match: "all", items: [{ kind: "rule", id: "or1", object: "contact", field: "country", condition: "any_of", value: ["pakistan"] }] },
+        outcome: { type: "forceBand", value: "b3" },
+      },
+      {
+        id: "o2",
+        objectId: "g1",
+        conditions: { match: "all", items: [{ kind: "rule", id: "or2", object: "deal", field: "approval", condition: "is_not", value: "approved" }] },
+        outcome: { type: "forceBand", value: "b3" },
+      },
+    ],
     updatedAt: "2026-10-13",
     updatedBy: "A. Bansal",
   },
@@ -176,7 +191,11 @@ export const scoreBuilderConfig: ScoreBuilderConfig = {
     logoMark: "T",
     settings: { label: "Settings", icon: <Settings />, items: settingsNav, searchPlaceholder: "Search settings" },
     user: { name: "John Doe", meta: "ID: 100245 · Admin" },
+    language: "EN",
+    help: { label: "Help", pendingReason: "Help content TBD (Q74)" },
   },
+  objectIcons: { contact: <User />, deal: <Briefcase /> },
+  pageSizes: [10, 25, 50],
   adapter: createScoreMemoryAdapter({
     models,
     schema,
@@ -241,7 +260,16 @@ export const scoreBuilderConfig: ScoreBuilderConfig = {
   copy: {
     pageTitle: "Score Builder",
     sectionTitle: "All score models",
-    sectionDescription: "Weighted scores for CRM objects (copy TBD, Q20).",
+    auditLogs: { label: "Audit logs", pendingReason: "Audit log content is not designed yet (Q68)." },
+    pageActions: {
+      tips: { label: "Tips", pendingReason: "Page action TBD (Q69)" },
+      more: { label: "More actions", pendingReason: "Page actions TBD (Q69)" },
+    },
+    addFilter: { label: "Add filter", pendingReason: "More filters TBD (Q70)" },
+    columns: { label: "Choose columns", pendingReason: "Column settings TBD (Q70)" },
+    descriptionHelp: "Provide details about this score model. (Q18)",
+    descriptionInfo: "Description help TBD (Q18)",
+    objectOverrideExample: "Example: if the related Deal is not approved, force High Risk.",
     banner: { title: "Score models rate records automatically", text: "Banner copy TBD (Q20)." },
     breadcrumb: ["Settings", "Brand Setup", "Score Builder"],
     howItWorks: "Add objects and their attributes, score each value, weight each attribute, then set outcome bands. Override rules can force a result.",

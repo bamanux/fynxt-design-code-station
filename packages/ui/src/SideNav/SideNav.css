@@ -154,3 +154,13 @@
   line-height: var(--fx-typography-body-sm-medium-line-height);
 }
 .fx-sidenav__user-meta { color: var(--fx-text-muted-foreground); font-family: var(--fx-typography-body-xs-font-family); font-size: var(--fx-typography-body-xs-font-size); line-height: var(--fx-typography-body-xs-line-height); }
+
+/* Settings mode (DCF-0002 v5 frame 01): FDS-101 Sidebar Nav Item text is Regular, Medium when active;
+   back control is a small ghost chevron; children are indented. Scoped to Settings mode only. */
+.fx-sidenav[data-mode="settings"] .fx-sidenav__settings .fx-sidenav__parent { font-weight: var(--fx-typography-body-sm-font-weight); }
+.fx-sidenav[data-mode="settings"] .fx-sidenav__settings .fx-sidenav__parent[data-active],
+.fx-sidenav[data-mode="settings"] .fx-sidenav__settings .fx-sidenav__parent--active,
+.fx-sidenav[data-mode="settings"] .fx-sidenav__settings .fx-sidenav__child[aria-current="page"] { font-weight: var(--fx-typography-body-sm-medium-font-weight); }
+.fx-sidenav[data-mode="settings"] .fx-sidenav__settings .fx-sidenav__children { margin-inline-start: 0; padding-inline-start: var(--fx-spacing-5); border-inline-start: 0; }
+.fx-sidenav[data-mode="settings"] .fx-sidenav__back { inline-size: var(--fx-spacing-6); block-size: var(--fx-spacing-6); }
+.fx-sidenav[data-mode="settings"] .fx-sidenav__back > svg { inline-size: var(--fx-spacing-4); block-size: var(--fx-spacing-4); }

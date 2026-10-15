@@ -7,6 +7,8 @@ export interface DataTableColumn<Row> {
   /** CSS width, e.g. "var(--fx-spacing-12)" or "30%". */
   width?: string;
   align?: "start" | "end" | "center";
+  /** Trailing header control, e.g. the FDS-101 Data Table Header menu (⋯) or the column chooser. */
+  headerAction?: ReactNode;
 }
 
 export interface DataTableProps<Row> {
@@ -37,7 +39,14 @@ export function DataTable<Row>({ caption, columns, rows, getRowId, empty }: Data
           <tr>
             {columns.map((c) => (
               <th key={c.id} scope="col" className="fx-table__th" data-align={c.align}>
-                {c.header}
+                {c.headerAction ? (
+                  <span className="fx-table__th-inner">
+                    <span className="fx-table__th-label">{c.header}</span>
+                    {c.headerAction}
+                  </span>
+                ) : (
+                  c.header
+                )}
               </th>
             ))}
           </tr>

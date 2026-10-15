@@ -18,7 +18,8 @@
   inline-size: 100%;
   block-size: var(--fx-spacing-10);
   padding-inline: var(--fx-spacing-3);
-  background: var(--fx-surface-input);
+  /* FDS-101 Input, Select, Textarea and Number Input bind InputBox to surface/card (DCF-0002 build check). */
+  background: var(--fx-surface-card);
   border: var(--fx-border-width-thin) solid var(--fx-border-default);
   border-radius: var(--fx-radius-default);
   color: var(--fx-text-foreground);

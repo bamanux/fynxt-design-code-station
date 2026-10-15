@@ -1,4 +1,4 @@
-import { allRules, isRuleComplete, type ConditionFieldType, type ConditionObject, type ConditionOperator } from "@fynxt/ui";
+import { allRules, isRuleComplete, type ConditionFieldType, type ConditionObject, type ConditionOperator, type ConditionRule, type ConditionValue } from "@fynxt/ui";
 import type { Band, ScoreAttribute, ScoreModelInput, ScoreObjectGroup } from "./types";
 
 /**
@@ -131,4 +131,55 @@ export function readout(input: ScoreModelInput, schema: ConditionObject[]): { ob
     attributes: g.attributes.length ? g.attributes.map((a) => attributeLabel(schema, g.object, a)).join(g.logic ? ` ${g.logic.toUpperCase()} ` : " · ") : "No attributes yet",
     joinBefore: i > 0 ? (input.connectors[i - 1]?.toUpperCase() ?? "AND / OR ?") : undefined,
   }));
+}
+
+/** Value text of a condition rule: option labels for list fields, the raw value otherwise. */
+function ruleValueText(rule: ConditionRule, schema: ConditionObject[]): string {
+  const options = fieldOf(schema, rule.object, rule.field)?.options ?? [];
+  const values = Array.isArray(rule.value) ? rule.value : rule.value ? [rule.value] : [];
+  return values.map((v) => options.find((o) => o.value === v)?.label ?? v).join(", ");
+}
+
+/**
+ * One condition as text. `style: "compact"` is the list cell ("User Type = Contact", frame 01);
+ * `"sentence"` is the overrides list ("Country is any of Pakistan", frame 32).
+ */
+export function ruleText(rule: ConditionRule, schema: ConditionObject[], operatorsByType: Record<ConditionFieldType, ConditionOperator[]>, style: "compact" | "sentence"): string {
+  const field = fieldOf(schema, rule.object, rule.field);
+  const name = field?.label ?? rule.fieldLabel ?? rule.field;
+  const op = field ? operatorsByType[field.type]?.find((o) => o.id === rule.condition) : undefined;
+  const opText = style === "compact" && rule.condition === "is" ? "=" : (op?.label ?? rule.condition);
+  return [name, opText, ruleValueText(rule, schema)].filter(Boolean).join(" ");
+}
+
+/** All conditions of a value as text, joined with " · " (list cell) or " and " (sentence). */
+export function conditionsText(
+  value: ConditionValue,
+  schema: ConditionObject[],
+  operatorsByType: Record<ConditionFieldType, ConditionOperator[]>,
+  style: "compact" | "sentence",
+  /** In sentences, name the object only when a rule checks another object ("If Deal Approval status …", frame 32). */
+  homeObject?: string
+): string {
+  const sep = style === "compact" ? " · " : value.match === "any" ? " or " : " and ";
+  return allRules(value)
+    .map((r) => {
+      const text = ruleText(r, schema, operatorsByType, style);
+      return homeObject && r.object && r.object !== homeObject ? `${objectLabel(schema, r.object)} ${text}` : text;
+    })
+    .join(sep);
+}
+
+/** Short area name for the header issue line ("1 issue · outcome bands", frame 27). */
+export function issueArea(target: Selection, schema: ConditionObject[], input: ScoreModelInput): string {
+  if (target.kind === "details") return "details";
+  if (target.kind === "bands") return "outcome bands";
+  if (target.kind === "overrides") return "overrides";
+  const g = input.objects.find((x) => x.id === target.objectId);
+  if (!g) return "objects";
+  if (target.kind === "attribute") {
+    const a = g.attributes.find((x) => x.id === target.attributeId);
+    if (a) return attributeLabel(schema, g.object, a);
+  }
+  return objectLabel(schema, g.object);
 }

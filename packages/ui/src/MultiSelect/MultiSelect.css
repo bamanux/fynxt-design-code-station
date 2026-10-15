@@ -10,7 +10,7 @@
   padding: var(--fx-spacing-1) var(--fx-spacing-3);
   border: var(--fx-border-width-thin) solid var(--fx-border-default);
   border-radius: var(--fx-radius-default);
-  background: var(--fx-surface-input);
+  background: var(--fx-surface-background); /* FDS-101 Multi Select InputBox */
   cursor: text;
 }
 .fx-multiselect__box:hover { border-color: var(--fx-border-strong); }
@@ -64,3 +64,20 @@
 .fx-multiselect__empty { color: var(--fx-text-muted-foreground); }
 .fx-multiselect__leading { display: inline-flex; color: var(--fx-icon-color); }
 .fx-multiselect__leading > svg { inline-size: var(--fx-spacing-4); block-size: var(--fx-spacing-4); }
+
+/* DCF-0002: Overflow state (FDS-101 Multi Select State=Overflow): first chips + "+N", one line. */
+.fx-multiselect__box[data-collapsed] { flex-wrap: nowrap; overflow: hidden; }
+.fx-multiselect__box[data-collapsed] .fx-multiselect__input { min-inline-size: 0; }
+.fx-multiselect__more {
+  flex: none;
+  padding: var(--fx-spacing-1) var(--fx-spacing-2);
+  border-radius: var(--fx-radius-md);
+  background: var(--fx-border-light);
+  color: var(--fx-brand-primary);
+  font-family: var(--fx-typography-label-xs-font-family);
+  font-weight: var(--fx-typography-label-xs-font-weight);
+  font-size: var(--fx-typography-label-xs-font-size);
+  line-height: var(--fx-typography-label-xs-line-height);
+}
+/* FDS-101 Multi Select uses Chip / Selection: border/light fill, no stroke. */
+.fx-multiselect__box .fx-chip { background: var(--fx-border-light); border-color: transparent; }

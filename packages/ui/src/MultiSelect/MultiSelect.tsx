@@ -26,6 +26,11 @@ export interface MultiSelectProps {
   leadingIcon?: ReactNode;
   /** Hide the label visually but keep it for assistive tech (e.g. a table cell, DCF-0002 Q27). */
   hideLabel?: boolean;
+  /**
+   * Show at most this many chips while the list is closed, then a "+N" count (FDS-101 Multi Select
+   * State=Overflow, DCF-0002 table cells). All chips show while the list is open. Default: all.
+   */
+  maxChips?: number;
 }
 
 /**
@@ -45,6 +50,7 @@ export function MultiSelect({
   disabled,
   noResultsText = "No matches",
   leadingIcon,
+  maxChips,
 }: MultiSelectProps) {
   const id = useId();
   const listId = `${id}-list`;
@@ -86,17 +92,27 @@ export function MultiSelect({
   }
 
   const activeOption = open ? filtered[active] : undefined;
+  // With maxChips the closed box stays on one line (compact); extra chips collapse into "+N".
+  const compact = !open && maxChips !== undefined;
+  const collapsed = compact && selected.length > maxChips;
+  const visible = collapsed ? selected.slice(0, maxChips) : selected;
   return (
     <div className="fx-field fx-multiselect" data-status={status} data-disabled={disabled || undefined}>
       <label htmlFor={id} className={hideLabel ? "fx-visually-hidden" : "fx-field__label"}>
         {label}
         {required && <span className="fx-field__required" aria-hidden="true">*</span>}
       </label>
-      <div className="fx-multiselect__box" onClick={() => inputRef.current?.focus()}>
+      <div className="fx-multiselect__box" data-collapsed={compact || undefined} onClick={() => inputRef.current?.focus()}>
         {leadingIcon && <span className="fx-multiselect__leading" aria-hidden="true">{leadingIcon}</span>}
-        {selected.map((opt) => (
+        {visible.map((opt) => (
           <Chip key={opt.value} label={opt.label} leading={opt.leading} onRemove={disabled ? undefined : () => onChange(value.filter((v) => v !== opt.value))} />
         ))}
+        {collapsed && (
+          <span className="fx-multiselect__more" title={selected.slice(maxChips).map((o) => o.label).join(", ")}>
+            +{selected.length - visible.length}
+            <span className="fx-visually-hidden"> more selected</span>
+          </span>
+        )}
         <input
           ref={inputRef}
           id={id}

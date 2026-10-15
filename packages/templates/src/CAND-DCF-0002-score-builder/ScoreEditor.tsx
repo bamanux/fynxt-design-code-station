@@ -1,24 +1,9 @@
-import {
-  Alert,
-  Badge,
-  Breadcrumb,
-  Button,
-  Checkbox,
-  ConfirmDialog,
-  IconButton,
-  Menu,
-  Modal,
-  OutlineRow,
-  SegmentedControl,
-  Spinner,
-  Toast,
-  allRules,
-  type ConditionObject,
-} from "@fynxt/ui";
-import { ArrowLeft, ChevronDown, ChevronLeft, ChevronRight, Copy, FileText, Gauge, MoreVertical, Plus, Trash2, Zap } from "lucide-react";
+import { Alert, Badge, Button, ConfirmDialog, IconButton, Menu, OutlineRow, SegmentedControl, Spinner, Toast, allRules, type ConditionObject } from "@fynxt/ui";
+import { ArrowRight, Box, ChevronDown, ChevronLeft, ChevronRight, Copy, FileText, MoreVertical, Plus, Target, Trash2, Zap } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AttributePane, BandsPane, DetailsPane, LOGIC_OPTIONS, ObjectPane, OverridesPane, logicWords, newId } from "./EditorPanes";
-import { attributeLabel, collectIssues, distribute, fieldOf, isAttributeComplete, objectLabel, readout, toNumber, weightSum, type Selection } from "./model";
+import { AttributePicker } from "./AttributePicker";
+import { AttributePane, BandsPane, DetailsPane, LOGIC_OPTIONS, ObjectPane, OverridesPane, logicWords, newId, unusedFields } from "./EditorPanes";
+import { attributeLabel, collectIssues, distribute, fieldOf, isAttributeComplete, issueArea, objectLabel, readout, toNumber, weightSum, type Selection } from "./model";
 import type { Logic, ScoreAttribute, ScoreBuilderConfig, ScoreModel, ScoreModelInput, ScoreObjectGroup } from "./types";
 
 export interface ScoreEditorProps {
@@ -30,7 +15,7 @@ export interface ScoreEditorProps {
 }
 
 type Load = { state: "loading" } | { state: "notFound" } | { state: "ready" };
-type Dialog = null | { kind: "leave" } | { kind: "removeObject"; group: ScoreObjectGroup } | { kind: "removeAttribute"; group: ScoreObjectGroup; attribute: ScoreAttribute } | { kind: "addAttributes"; group: ScoreObjectGroup };
+type Dialog = null | { kind: "leave" } | { kind: "removeObject"; group: ScoreObjectGroup } | { kind: "removeAttribute"; group: ScoreObjectGroup; attribute: ScoreAttribute };
 
 const emptyInput = (): ScoreModelInput => ({ name: "", description: "", method: "weighted", appliesTo: { match: "all", items: [] }, objects: [], connectors: [], bands: [], overrides: [] });
 const toInput = (m: ScoreModel): ScoreModelInput => ({ name: m.name, description: m.description, method: m.method, appliesTo: m.appliesTo, objects: m.objects, connectors: m.connectors, bands: m.bands, overrides: m.overrides });
@@ -57,7 +42,7 @@ export function ScoreEditor({ config, modelId, onClose }: ScoreEditorProps) {
   const [summaryOpen, setSummaryOpen] = useState(true); // D31 / Q64: shown on every launch, not remembered.
   const [showErrors, setShowErrors] = useState(false);
   const [dialog, setDialog] = useState<Dialog>(null);
-  const [picked, setPicked] = useState<string[]>([]);
+  const [howItWorksOpen, setHowItWorksOpen] = useState(true);
   const [busy, setBusy] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const [undo, setUndo] = useState<{ message: string; snapshot: ScoreModelInput } | null>(null);
@@ -69,6 +54,10 @@ export function ScoreEditor({ config, modelId, onClose }: ScoreEditorProps) {
         setModel(m);
         setInput(toInput(m));
         setSaved(JSON.stringify(toInput(m)));
+        // Frame 35: an existing model opens on its first attribute.
+        const g = m.objects[0];
+        const a = g?.attributes[0];
+        if (g && a) setSelection({ kind: "attribute", objectId: g.id, attributeId: a.id });
         setLoad({ state: "ready" });
       },
       () => setLoad({ state: "notFound" })
@@ -137,6 +126,13 @@ export function ScoreEditor({ config, modelId, onClose }: ScoreEditorProps) {
     setSelection({ kind: "attribute", objectId: group.id, attributeId: copy.id });
   }
 
+  function addAttributes(group: ScoreObjectGroup, fields: string[]) {
+    const added = fields.map((field) => ({ id: newId(), field, weight: "", values: [] }));
+    if (!added.length) return;
+    setGroup(group.id, { attributes: [...group.attributes, ...added] });
+    setSelection({ kind: "attribute", objectId: group.id, attributeId: added[0]!.id });
+  }
+
   function distributeEvenly(group: ScoreObjectGroup) {
     const shares = distribute(config.weightTotal, group.attributes.length);
     setGroup(group.id, { attributes: group.attributes.map((a, i) => ({ ...a, weight: String(shares[i]) })) });
@@ -170,8 +166,11 @@ export function ScoreEditor({ config, modelId, onClose }: ScoreEditorProps) {
     return (
       <div className="fx-sb-editor">
         <header className="fx-sb-editor__header">
-          <IconButton variant="ghost" label="Back to Score Builder" icon={<ArrowLeft />} onClick={() => onClose()} />
-          <p className="fx-sb-editor__title">{load.state === "loading" ? "Loading…" : "Score model not found"}</p>
+          <IconButton variant="ghost" size="sm" label="Back to Score Builder" icon={<ChevronLeft />} onClick={() => onClose()} />
+          <div className="fx-sb-editor__heading">
+            <p className="fx-sb-crumbs">{config.copy.breadcrumb.join(" › ")}</p>
+            <p className="fx-sb-editor__title">{load.state === "loading" ? "Loading…" : "Score model not found"}</p>
+          </div>
         </header>
         <div className="fx-sb-state fx-sb-state--page" role="status">
           {load.state === "loading" ? (
@@ -194,31 +193,51 @@ export function ScoreEditor({ config, modelId, onClose }: ScoreEditorProps) {
   const selectedGroup = selection.kind === "object" || selection.kind === "attribute" ? input.objects.find((g) => g.id === selection.objectId) : undefined;
   const selectedAttr = selection.kind === "attribute" ? selectedGroup?.attributes.find((a) => a.id === selection.attributeId) : undefined;
   const paneBase = { config, schema, schemaStatus, onRetrySchema: () => setSchemaTick((t) => t + 1), input, update };
-  const unused = (g: ScoreObjectGroup) => (schema.find((o) => o.id === g.object)?.fields ?? []).filter((f) => !g.attributes.some((a) => a.field === f.id));
   const allCollapsed = input.objects.length > 0 && input.objects.every((g) => collapsedGroups[g.id]);
   const issueLabel = `${issues.length} ${issues.length === 1 ? "issue" : "issues"}`;
+  // Frame 27: "1 issue · outcome bands"; several issues show the count only (frame 12).
+  const issueLine = issues.length === 1 ? `${issueLabel} · ${issueArea(issues[0]!.target, schema, input)}` : issueLabel;
+  const objectIcon = (objectId: string) => config.objectIcons?.[objectId] ?? <Box />;
+
+  // Frame 06 / 22: object menu. Primary inside the empty outline (frame 03), full width below the groups.
+  const addObjectMenu = (primary = false) => (
+    <Menu
+      label="Choose an object"
+      heading="Objects"
+      align="start"
+      items={schema.map((o) => ({ id: o.id, label: o.label, onSelect: () => addObject(o.id) }))}
+      renderTrigger={(t) => (
+        <Button {...t} variant={primary ? "primary" : "secondary"} size="s" leadingIcon={<Plus />} disabled={schemaStatus !== "ready"} className={primary ? undefined : "fx-sb-addobject"}>
+          Add object
+        </Button>
+      )}
+    />
+  );
 
   return (
     <div className="fx-sb-editor">
       <header className="fx-sb-editor__header">
-        <IconButton variant="ghost" label="Back to Score Builder" icon={<ArrowLeft />} onClick={requestLeave} />
+        <IconButton variant="ghost" size="sm" label="Back to Score Builder" icon={<ChevronLeft />} onClick={requestLeave} />
         <div className="fx-sb-editor__heading">
-          <Breadcrumb items={config.copy.breadcrumb.map((label, i, all) => ({ label, onClick: i === all.length - 1 ? requestLeave : undefined }))} />
+          <nav aria-label="Breadcrumb">
+            <p className="fx-sb-crumbs">{config.copy.breadcrumb.join(" › ")}</p>
+          </nav>
           <div className="fx-sb-editor__title-row">
-            <p className="fx-sb-editor__title">{input.name.trim() || "New score model"}</p>
-            {status && <Badge status={status.tone}>{status.label}</Badge>}
+            <h1 className="fx-sb-editor__title">{input.name.trim() || "New score model"}</h1>
+            {status && <Badge status="neutral">{status.label}</Badge>}
           </div>
         </div>
         <div className="fx-sb-editor__header-actions">
           {issues.length > 0 && dirty ? (
             <Menu
               label="Issues to fix"
+              heading={<span className="fx-sb-strong">{`${issueLabel} to fix before saving`}</span>}
               align="end"
-              items={issues.map((iss) => ({ id: iss.id, label: iss.message, onSelect: () => setSelection(iss.target) }))}
+              items={issues.map((iss) => ({ id: iss.id, label: iss.message, trailing: <ArrowRight />, onSelect: () => setSelection(iss.target) }))}
               renderTrigger={(t) => (
-                <Button {...t} variant="ghost" size="s">
-                  {issueLabel}
-                </Button>
+                <button {...t} type="button" className="fx-sb-issues">
+                  {issueLine}
+                </button>
               )}
             />
           ) : (
@@ -259,6 +278,7 @@ export function ScoreEditor({ config, modelId, onClose }: ScoreEditorProps) {
           {input.objects.length === 0 && (
             <div className="fx-sb-empty fx-sb-empty--outline">
               <p className="fx-sb-sub">Add the object you want to score, e.g. Contact. You can add more and join them with AND / OR.</p>
+              {addObjectMenu(true)}
             </div>
           )}
 
@@ -266,7 +286,7 @@ export function ScoreEditor({ config, modelId, onClose }: ScoreEditorProps) {
             const name = objectLabel(schema, g.object);
             const collapsed = Boolean(collapsedGroups[g.id]);
             const sum = weightSum(g);
-            const objOverrides = input.overrides.some((o) => o.objectId === g.id && !o.attributeId);
+            const objOverrides = input.overrides.some((o) => o.objectId === g.id);
             return (
               <div key={g.id} className="fx-sb-group-wrap">
                 {gi > 0 && (
@@ -286,6 +306,9 @@ export function ScoreEditor({ config, modelId, onClose }: ScoreEditorProps) {
                   <div className="fx-sb-group__head">
                     <IconButton variant="ghost" size="sm" label={`${collapsed ? "Expand" : "Collapse"} ${name}`} aria-expanded={!collapsed} icon={collapsed ? <ChevronRight /> : <ChevronDown />} onClick={() => setCollapsedGroups((c) => ({ ...c, [g.id]: !collapsed }))} />
                     <button type="button" className="fx-sb-group__name" aria-current={selection.kind === "object" && selection.objectId === g.id ? "true" : undefined} onClick={() => setSelection({ kind: "object", objectId: g.id })}>
+                      <span className="fx-sb-group__icon" aria-hidden="true">
+                        {objectIcon(g.object)}
+                      </span>
                       {name}
                       {objOverrides && <Zap className="fx-sb-icon" aria-label="has override rules" />}
                     </button>
@@ -335,18 +358,7 @@ export function ScoreEditor({ config, modelId, onClose }: ScoreEditorProps) {
                         })}
                       </div>
                       <div className="fx-sb-group__actions">
-                        <Button
-                          variant="ghost"
-                          size="s"
-                          leadingIcon={<Plus />}
-                          disabled={schemaStatus !== "ready" || !unused(g).length}
-                          onClick={() => {
-                            setPicked([]);
-                            setDialog({ kind: "addAttributes", group: g });
-                          }}
-                        >
-                          Add attribute
-                        </Button>
+                        <AttributePicker objectName={name} fields={unusedFields(schema, g)} onAdd={(fields) => addAttributes(g, fields)} disabled={schemaStatus !== "ready"} />
                         {g.attributes.length > 1 && (
                           <Button variant="ghost" size="s" onClick={() => distributeEvenly(g)}>
                             Distribute evenly
@@ -360,19 +372,11 @@ export function ScoreEditor({ config, modelId, onClose }: ScoreEditorProps) {
             );
           })}
 
-          <Menu
-            label="Choose an object"
-            items={schema.map((o) => ({ id: o.id, label: o.label, onSelect: () => addObject(o.id) }))}
-            renderTrigger={(t) => (
-              <Button {...t} variant={input.objects.length ? "secondary" : "primary"} size="s" leadingIcon={<Plus />} disabled={schemaStatus !== "ready"}>
-                Add object
-              </Button>
-            )}
-          />
+          {input.objects.length > 0 && addObjectMenu()}
 
           <p className="fx-sb-label">Step 3 · Result</p>
           <button type="button" className="fx-sb-navitem" aria-current={selection.kind === "bands" ? "true" : undefined} onClick={() => setSelection({ kind: "bands" })}>
-            <Gauge aria-hidden="true" />
+            <Target aria-hidden="true" />
             Outcome bands
           </button>
           <button type="button" className="fx-sb-navitem" aria-current={selection.kind === "overrides" ? "true" : undefined} onClick={() => setSelection({ kind: "overrides" })}>
@@ -396,8 +400,10 @@ export function ScoreEditor({ config, modelId, onClose }: ScoreEditorProps) {
               Your changes are still here. Check your connection and try again.
             </Alert>
           )}
-          {selection.kind === "details" && <DetailsPane {...paneBase} showErrors={showErrors} />}
-          {selection.kind === "object" && selectedGroup && <ObjectPane {...paneBase} group={selectedGroup} showErrors={showErrors} onLogic={(logic) => setGroup(selectedGroup.id, { logic })} />}
+          {selection.kind === "details" && <DetailsPane {...paneBase} showErrors={showErrors} howItWorksOpen={howItWorksOpen} onCloseHowItWorks={() => setHowItWorksOpen(false)} />}
+          {selection.kind === "object" && selectedGroup && (
+            <ObjectPane {...paneBase} group={selectedGroup} showErrors={showErrors} onLogic={(logic) => setGroup(selectedGroup.id, { logic })} onAddAttributes={(fields) => addAttributes(selectedGroup, fields)} />
+          )}
           {selection.kind === "attribute" && selectedGroup && selectedAttr && (
             <AttributePane
               {...paneBase}
@@ -528,39 +534,6 @@ export function ScoreEditor({ config, modelId, onClose }: ScoreEditorProps) {
           setDialog(null);
         }}
       />
-      <Modal
-        open={dialog?.kind === "addAttributes"}
-        onClose={() => setDialog(null)}
-        title={dialog?.kind === "addAttributes" ? `Add ${objectLabel(schema, dialog.group.object)} attributes` : ""}
-        size="small"
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setDialog(null)}>
-              Cancel
-            </Button>
-            <Button
-              disabled={!picked.length}
-              onClick={() => {
-                if (dialog?.kind !== "addAttributes") return;
-                const added = picked.map((field) => ({ id: newId(), field, weight: "", values: [] }));
-                setGroup(dialog.group.id, { attributes: [...dialog.group.attributes, ...added] });
-                setSelection({ kind: "attribute", objectId: dialog.group.id, attributeId: added[0]!.id });
-                setDialog(null);
-              }}
-            >
-              {picked.length ? `Add ${picked.length} ${picked.length === 1 ? "attribute" : "attributes"}` : "Add attributes"}
-            </Button>
-          </>
-        }
-      >
-        <fieldset className="fx-sb-picklist">
-          <legend className="fx-sb-sub">Choose one or more fields</legend>
-          {dialog?.kind === "addAttributes" &&
-            unused(dialog.group).map((f) => (
-              <Checkbox key={f.id} label={f.label} checked={picked.includes(f.id)} onChange={(e) => setPicked((p) => (e.target.checked ? [...p, f.id] : p.filter((x) => x !== f.id)))} />
-            ))}
-        </fieldset>
-      </Modal>
     </div>
   );
 }

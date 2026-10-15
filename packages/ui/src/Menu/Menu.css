@@ -44,3 +44,14 @@
 .fx-menu__item:disabled { opacity: var(--fx-opacity-disabled); cursor: not-allowed; }
 .fx-menu__label { flex: 1; }
 .fx-menu__check { inline-size: var(--fx-spacing-4); block-size: var(--fx-spacing-4); color: var(--fx-icon-color); }
+
+/* DCF-0002: optional heading (FDS-101 Dropdown Menu section label) and trailing icon. */
+.fx-menu__heading {
+  padding: var(--fx-spacing-sm) var(--fx-spacing-md) var(--fx-spacing-xs);
+  color: var(--fx-text-muted-foreground);
+  font-family: var(--fx-typography-body-xs-font-family);
+  font-size: var(--fx-typography-body-xs-font-size);
+  line-height: var(--fx-typography-body-xs-line-height);
+}
+.fx-menu__trailing { display: inline-flex; margin-inline-start: auto; color: var(--fx-icon-color); }
+.fx-menu__trailing > svg { inline-size: var(--fx-spacing-4); block-size: var(--fx-spacing-4); }

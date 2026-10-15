@@ -1,7 +1,9 @@
-import { AppShell, SideNav, TopNav } from "@fynxt/ui";
+import { AppShell, Button, IconButton, SideNav, TopNav } from "@fynxt/ui";
+import { Bell, CircleHelp, Globe } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { ScoreEditor } from "./ScoreEditor";
 import { ScoreModelList } from "./ScoreModelList";
+import { PendingIconButton } from "./Pending";
 import type { ScoreBuilderConfig, ScoreShellConfig } from "./types";
 
 export interface ScoreBuilderProps {
@@ -64,7 +66,22 @@ function Shell({ shell, children }: { shell: ScoreShellConfig; children: ReactNo
           user={shell.user}
         />
       }
-      header={<TopNav title={shell.title} />}
+      header={
+        <TopNav
+          title={shell.title}
+          titleAdornment={shell.help && <PendingIconButton control={shell.help} icon={<CircleHelp />} size="xs" />}
+          actions={
+            <>
+              <IconButton variant="ghost" size="sm" label="Notifications" icon={<Bell />} badge={shell.notifications || undefined} badgeStatus="error" />
+              {shell.language && (
+                <Button variant="secondary" size="s" leadingIcon={<Globe />} aria-label={`Language: ${shell.language}`}>
+                  {shell.language}
+                </Button>
+              )}
+            </>
+          }
+        />
+      }
     >
       {children}
     </AppShell>

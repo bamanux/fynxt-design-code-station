@@ -94,4 +94,11 @@ describe("Menu", () => {
     expect(current).toHaveAttribute("aria-checked", "true");
     expect(current).toHaveFocus();
   });
+  it("shows an optional heading that is not a menu item (DCF-0002)", async () => {
+    render(<Menu label="Add condition" heading="Fields" items={[{ id: "a", label: "User Type", onSelect: () => {}, trailing: <span>→</span> }]} renderTrigger={(p) => <button {...p}>Add condition</button>} />);
+    await userEvent.click(screen.getByRole("button", { name: "Add condition" }));
+    expect(screen.getByText("Fields")).toBeInTheDocument();
+    expect(screen.getAllByRole("menuitem")).toHaveLength(1);
+    expect(screen.getByRole("menuitem", { name: "User Type" })).toBeInTheDocument();
+  });
 });
