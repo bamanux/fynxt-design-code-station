@@ -16,6 +16,14 @@
       "section": "Operations",
       "caseId": "DCF-0003",
       "template": "CAND-DCF-0003-incentive-programs"
+    },
+    {
+      "id": "settings.brand-setup.score-builder",
+      "label": "Score Builder",
+      "module": "Settings",
+      "section": "Brand Setup",
+      "caseId": "DCF-0002",
+      "template": "CAND-DCF-0002-score-builder"
     }
   ]
 }
