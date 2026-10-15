@@ -7,6 +7,7 @@
  */
 export const TEMPLATE_IDS: readonly string[] = [];
 
-export const CANDIDATE_IDS: readonly string[] = ["CAND-DCF-0001-activity-workspace", "CAND-DCF-0003-incentive-programs"];
+export const CANDIDATE_IDS: readonly string[] = ["CAND-DCF-0001-activity-workspace", "CAND-DCF-0002-score-builder", "CAND-DCF-0003-incentive-programs"];
 export * from "./CAND-DCF-0001-activity-workspace";
 export * from "./CAND-DCF-0003-incentive-programs";
+export * from "./CAND-DCF-0002-score-builder";
