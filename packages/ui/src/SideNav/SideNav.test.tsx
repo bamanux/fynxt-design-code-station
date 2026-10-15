@@ -50,3 +50,70 @@ describe("SideNav", () => {
     expect(screen.getByRole("link", { name: "Tasks" })).toBeInTheDocument();
   });
 });
+
+// DCF-0002 variant: Settings menu (D8, D13, D14).
+const settingsItems: SideNavItem[] = [
+  { id: "profile", label: "Profile Settings", icon: <svg />, href: "#profile" },
+  { id: "brand", label: "Brand Setup", icon: <svg />, children: [{ id: "score-builder", label: "Score Builder", href: "#score" }] },
+];
+
+function SettingsHarness({ activeId = "score-builder", initial = false }: { activeId?: string; initial?: boolean }) {
+  const [collapsed, setCollapsed] = useState(initial);
+  return (
+    <SideNav
+      items={items}
+      activeId={activeId}
+      collapsed={collapsed}
+      onCollapsedChange={setCollapsed}
+      logo="Tenant logo"
+      logoMark="T"
+      settings={{ label: "Settings", icon: <svg />, items: settingsItems, searchPlaceholder: "Search settings" }}
+      user={{ name: "John Doe", meta: "ID: 100245 · Admin" }}
+    />
+  );
+}
+
+describe("SideNav · Settings mode (DCF-0002)", () => {
+  it("opens on the Settings menu when a Settings page is current, without a duplicate Settings item (D13)", () => {
+    render(<SettingsHarness />);
+    const nav = screen.getByRole("navigation", { name: "Main" });
+    expect(within(nav).getByRole("heading", { name: "Settings" })).toBeInTheDocument();
+    expect(within(nav).getByRole("link", { name: "Score Builder" })).toHaveAttribute("aria-current", "page");
+    expect(within(nav).queryByRole("button", { name: "Settings" })).not.toBeInTheDocument();
+    expect(within(nav).getByText("John Doe")).toBeInTheDocument();
+    expect(within(nav).getByText("ID: 100245 · Admin")).toBeInTheDocument();
+  });
+
+  it("Back shows the main menu without navigating and keeps Settings selected (D8)", async () => {
+    render(<SettingsHarness />);
+    await userEvent.click(screen.getByRole("button", { name: "Back to main menu" }));
+    const settingsItem = screen.getByRole("button", { name: "Settings" });
+    expect(settingsItem).toHaveClass("fx-sidenav__parent--active");
+    expect(screen.getByRole("button", { name: "Tickets & Activities" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Score Builder" })).not.toBeInTheDocument();
+    await userEvent.click(settingsItem);
+    expect(screen.getByRole("heading", { name: "Settings" })).toBeInTheDocument();
+  });
+
+  it("filters the Settings menu", async () => {
+    render(<SettingsHarness />);
+    await userEvent.type(screen.getByRole("searchbox", { name: "Search settings" }), "score");
+    expect(screen.getByRole("link", { name: "Score Builder" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Profile Settings" })).not.toBeInTheDocument();
+  });
+
+  it("collapses the Settings menu to a rail with Back and the settings icons (D14)", async () => {
+    render(<SettingsHarness initial />);
+    const nav = screen.getByRole("navigation", { name: "Main" });
+    expect(within(nav).getByRole("button", { name: "Back to main menu" })).toBeInTheDocument();
+    expect(within(nav).getByRole("button", { name: "Brand Setup" })).toHaveAttribute("data-active", "true");
+    expect(within(nav).getByRole("link", { name: "Profile Settings" })).toBeInTheDocument();
+    expect(within(nav).queryByRole("button", { name: "Dashboard" })).not.toBeInTheDocument();
+  });
+
+  it("starts on the main menu for non-Settings pages, with the Settings item not active", () => {
+    render(<SettingsHarness activeId="tasks" />);
+    expect(screen.getByRole("button", { name: "Settings" })).not.toHaveClass("fx-sidenav__parent--active");
+    expect(screen.getByRole("link", { name: "Tasks" })).toHaveAttribute("aria-current", "page");
+  });
+});

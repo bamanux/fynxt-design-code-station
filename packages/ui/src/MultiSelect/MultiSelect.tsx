@@ -24,6 +24,8 @@ export interface MultiSelectProps {
   noResultsText?: string;
   /** Leading icon in the box, e.g. a search icon (FDS-101 Search Multi-Select 57:87). */
   leadingIcon?: ReactNode;
+  /** Hide the label visually but keep it for assistive tech (e.g. a table cell, DCF-0002 Q27). */
+  hideLabel?: boolean;
 }
 
 /**
@@ -32,6 +34,7 @@ export interface MultiSelectProps {
  */
 export function MultiSelect({
   label,
+  hideLabel,
   options,
   value,
   onChange,
@@ -85,7 +88,7 @@ export function MultiSelect({
   const activeOption = open ? filtered[active] : undefined;
   return (
     <div className="fx-field fx-multiselect" data-status={status} data-disabled={disabled || undefined}>
-      <label htmlFor={id} className="fx-field__label">
+      <label htmlFor={id} className={hideLabel ? "fx-visually-hidden" : "fx-field__label"}>
         {label}
         {required && <span className="fx-field__required" aria-hidden="true">*</span>}
       </label>

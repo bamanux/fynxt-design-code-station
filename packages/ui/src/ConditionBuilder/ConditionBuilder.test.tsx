@@ -193,3 +193,10 @@ describe("ConditionBuilder model", () => {
     expect(summarize({ match: "all", items: [] }, OBJECTS, OPS)).toBe("");
   });
 });
+
+describe("ConditionBuilder · emptyDescription (DCF-0002)", () => {
+  it("uses the given empty-state text", () => {
+    render(<ConditionBuilder objects={[]} operatorsByType={{ list: [], number: [], date: [], text: [] }} value={{ match: "all", items: [] }} onChange={() => {}} emptyDescription="Add a condition to narrow which records are scored." />);
+    expect(screen.getByText("Add a condition to narrow which records are scored.")).toBeInTheDocument();
+  });
+});

@@ -1,0 +1,30 @@
+/* Spec: FDS-101 Button Group (108:30, Horizontal · Connected): 1px border/default, radius/default,
+   segments separated by border/default; selected segment = brand/primary + text/on-primary.
+   DCF-0002 Logic Switch (72:17580) uses it at sm (segment padding spacing/1 · spacing/3). */
+.fx-segmented {
+  display: inline-flex;
+  flex: none;
+  border: var(--fx-border-width-thin) solid var(--fx-border-default);
+  border-radius: var(--fx-radius-default);
+  background: var(--fx-surface-card);
+  overflow: hidden;
+}
+.fx-segmented[aria-invalid="true"] { border-color: var(--fx-status-destructive); }
+.fx-segmented__option {
+  padding: var(--fx-spacing-2) var(--fx-spacing-4);
+  border: 0;
+  border-inline-start: var(--fx-border-width-thin) solid var(--fx-border-default);
+  background: transparent;
+  color: var(--fx-text-foreground);
+  font-family: var(--fx-typography-body-sm-medium-font-family);
+  font-weight: var(--fx-typography-body-sm-medium-font-weight);
+  font-size: var(--fx-typography-body-sm-medium-font-size);
+  line-height: var(--fx-typography-body-sm-medium-line-height);
+  cursor: pointer;
+}
+.fx-segmented--sm .fx-segmented__option { padding: var(--fx-spacing-1) var(--fx-spacing-3); }
+.fx-segmented__option:first-child { border-inline-start: 0; }
+.fx-segmented__option:hover:not([aria-checked="true"]):not(:disabled) { background: var(--fx-surface-background); }
+.fx-segmented__option[aria-checked="true"] { background: var(--fx-brand-primary); color: var(--fx-text-on-primary); }
+.fx-segmented__option:focus-visible { outline: var(--fx-border-width-thick) solid var(--fx-border-focus); outline-offset: -2px; }
+.fx-segmented__option:disabled { opacity: var(--fx-opacity-disabled); cursor: not-allowed; }

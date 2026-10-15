@@ -1,0 +1,31 @@
+/* Spec: FDS-101 Toggle (53:49): track 44×24 (spacing/11 × spacing/6), radius/full; On = brand/primary,
+   Off = border/strong; thumb 20 (spacing/5) surface/card; Disabled = opacity-disabled. */
+.fx-toggle { display: inline-flex; align-items: center; gap: var(--fx-spacing-2); }
+.fx-toggle__track {
+  position: relative;
+  flex: none;
+  inline-size: var(--fx-spacing-11);
+  block-size: var(--fx-spacing-6);
+  padding: 0;
+  border: 0;
+  border-radius: var(--fx-radius-full);
+  background: var(--fx-border-strong);
+  cursor: pointer;
+}
+.fx-toggle__track[aria-checked="true"] { background: var(--fx-brand-primary); }
+.fx-toggle__thumb {
+  position: absolute;
+  inset-block-start: calc(var(--fx-spacing-1) / 2);
+  inset-inline-start: calc(var(--fx-spacing-1) / 2);
+  inline-size: var(--fx-spacing-5);
+  block-size: var(--fx-spacing-5);
+  border-radius: var(--fx-radius-full);
+  background: var(--fx-surface-card);
+  box-shadow: var(--fx-elevation-sm);
+  transition: transform 120ms ease-out;
+}
+.fx-toggle__track[aria-checked="true"] .fx-toggle__thumb { transform: translateX(calc(var(--fx-spacing-5))); }
+.fx-toggle__track:focus-visible { outline: var(--fx-border-width-thick) solid var(--fx-border-focus); outline-offset: var(--fx-border-width-medium); }
+.fx-toggle__track:disabled { opacity: var(--fx-opacity-disabled); cursor: not-allowed; }
+.fx-toggle__label { color: var(--fx-text-foreground); font-family: var(--fx-typography-body-sm-font-family); font-size: var(--fx-typography-body-sm-font-size); line-height: var(--fx-typography-body-sm-line-height); }
+@media (prefers-reduced-motion: reduce) { .fx-toggle__thumb { transition: none; } }

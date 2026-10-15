@@ -105,3 +105,52 @@
 .fx-sidenav__rail-item:hover { background: var(--fx-color-neutral-50); }
 .fx-sidenav__rail-item[data-active],
 .fx-sidenav__rail-item[aria-current="page"] { background: var(--fx-brand-primary); color: var(--fx-text-on-primary); }
+
+/* DCF-0002 variant (work file 21:3687, Mode = Main / Settings): Settings menu replaces the main menu;
+   bottom area = Settings item · divider · user tag (D8). Settings item hidden in Settings mode (D13). */
+.fx-sidenav__settings { display: flex; flex-direction: column; gap: var(--fx-spacing-2); min-block-size: 0; padding: var(--fx-spacing-3) var(--fx-spacing-2) 0; }
+.fx-sidenav__settings .fx-sidenav__list { padding: 0; }
+.fx-sidenav__settings-header { display: flex; align-items: center; gap: var(--fx-spacing-2); padding-inline: var(--fx-spacing-1); }
+.fx-sidenav__settings-title {
+  margin: 0;
+  color: var(--fx-text-foreground);
+  font-family: var(--fx-typography-heading-sm-font-family);
+  font-weight: var(--fx-typography-heading-sm-font-weight);
+  font-size: var(--fx-typography-heading-sm-font-size);
+  line-height: var(--fx-typography-heading-sm-line-height);
+}
+.fx-sidenav__back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--fx-spacing-8);
+  block-size: var(--fx-spacing-8);
+  padding: 0;
+  border: 0;
+  border-radius: var(--fx-radius-default);
+  background: transparent;
+  color: var(--fx-icon-color);
+  cursor: pointer;
+}
+.fx-sidenav__back > svg,
+.fx-sidenav__rail-item > svg { inline-size: var(--fx-spacing-5); block-size: var(--fx-spacing-5); }
+.fx-sidenav__back:hover { background: var(--fx-color-neutral-50); }
+.fx-sidenav__back:focus-visible { outline: var(--fx-border-width-thick) solid var(--fx-border-focus); outline-offset: 1px; }
+.fx-sidenav__rail-divider { inline-size: var(--fx-spacing-10); border-block-start: var(--fx-border-width-thin) solid var(--fx-border-default); }
+.fx-sidenav__bottom { display: flex; flex-direction: column; gap: var(--fx-spacing-2); margin-block-start: auto; padding: var(--fx-spacing-3) var(--fx-spacing-2); }
+.fx-sidenav--collapsed .fx-sidenav__bottom { align-items: center; }
+.fx-sidenav__divider { inline-size: 100%; margin: 0; border: 0; border-block-start: var(--fx-border-width-thin) solid var(--fx-border-default); }
+.fx-sidenav__user { display: flex; align-items: center; gap: var(--fx-spacing-3); padding: var(--fx-spacing-2) var(--fx-spacing-3); }
+.fx-sidenav--collapsed .fx-sidenav__user { padding-inline: 0; }
+.fx-sidenav__user-text { display: flex; flex-direction: column; min-inline-size: 0; }
+.fx-sidenav__user-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fx-text-foreground);
+  font-family: var(--fx-typography-body-sm-medium-font-family);
+  font-weight: var(--fx-typography-body-sm-medium-font-weight);
+  font-size: var(--fx-typography-body-sm-medium-font-size);
+  line-height: var(--fx-typography-body-sm-medium-line-height);
+}
+.fx-sidenav__user-meta { color: var(--fx-text-muted-foreground); font-family: var(--fx-typography-body-xs-font-family); font-size: var(--fx-typography-body-xs-font-size); line-height: var(--fx-typography-body-xs-line-height); }

@@ -41,6 +41,8 @@ export interface ConditionBuilderProps {
   alert?: ReactNode;
   showSummary?: boolean;
   description?: string;
+  /** Text of the empty state (DCF-0002 reuses the builder for score conditions). Defaults to the DCF-0003 enrolment copy. */
+  emptyDescription?: string;
   /** Stable id generator; defaults to crypto.randomUUID. */
   createId?: () => string;
 }
@@ -91,6 +93,7 @@ export function ConditionBuilder({
   alert,
   showSummary = true,
   description = "Create rules and groups. Participants enrol only if they match All or Any of them.",
+  emptyDescription = "Add a rule to enrol participants by their CRM data, or add a group to combine rules.",
   createId = () => crypto.randomUUID(),
 }: ConditionBuilderProps) {
   const ready = status === "ready";
@@ -335,7 +338,7 @@ export function ConditionBuilder({
           )}
         </div>
       )}
-      {ready && value.items.length === 0 && <EmptyState compact title="No rules yet" description="Add a rule to enrol participants by their CRM data, or add a group to combine rules." />}
+      {ready && value.items.length === 0 && <EmptyState compact title="No rules yet" description={emptyDescription} />}
       {ready && value.items.length > 0 && (
         <div className="fx-cb__tree">
           <Root />

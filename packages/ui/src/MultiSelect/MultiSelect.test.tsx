@@ -58,3 +58,11 @@ describe("MultiSelect", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("Assign the task to at least one user.");
   });
 });
+
+describe("MultiSelect · hideLabel (DCF-0002)", () => {
+  it("keeps the accessible name when the label is hidden", () => {
+    render(<MultiSelect label="Values, row 1" hideLabel options={[{ value: "in", label: "India" }]} value={[]} onChange={() => {}} />);
+    expect(screen.getByRole("combobox", { name: "Values, row 1" })).toBeInTheDocument();
+    expect(screen.getByText("Values, row 1")).toHaveClass("fx-visually-hidden");
+  });
+});
