@@ -9,6 +9,7 @@ import { assertSameOriginWrite, currentUser, readForm, readJson, sendJson } from
 import { galleryEntries, library } from "./library";
 import { addMember, memberEmails, readMembers, removeMember, setOwner } from "./members";
 import { canComment, canRun, canSubmit, headlessBlocker, stageFor } from "./permissions";
+import { exportPage } from "./exportPage";
 import { addPin, listPins } from "./pins";
 import { agentProblem, cancelRun, startRun, subscribe } from "./runs";
 import { clearSession, cookie, readCookie, setSession } from "./session";
@@ -110,6 +111,19 @@ async function route(req: IncomingMessage, res: ServerResponse, path: string, qu
   }
 
   if (parts[0] === "library" && method === "GET") return sendJson(res, 200, await library());
+
+  // ---------- Download a gallery page as one self-contained HTML file (share before code review)
+  if (parts[0] === "pages" && parts[1] && parts[2] === "export" && method === "GET") {
+    const page = await exportPage(decodeURIComponent(parts[1]));
+    res.writeHead(200, {
+      "Content-Type": "text/html; charset=utf-8",
+      "Content-Disposition": `attachment; filename="${page.fileName}"`,
+      "Cache-Control": "no-store",
+      "X-Content-Type-Options": "nosniff",
+    });
+    res.end(page.html);
+    return;
+  }
 
   // ---------- Pinned comments on built gallery pages
   if (parts[0] === "pages" && parts[1] && parts[2] === "pins") {

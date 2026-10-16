@@ -58,7 +58,9 @@ to run without it.
 5. **Gallery** shows pages in review (`apps/studio/gallery/pages.json`) and published pages
    (`menu.json`), with each page's case and status. **Request a change** on a page opens a new case
    linked to that page and its source case, and FDI takes it through the same steps. **Open full page**
-   shows the page at full width. **Library** shows the live tokens, components (with demos) and
+   shows the page at full width. **Download** saves the page as one self-contained HTML file (all code,
+   styles and icons inline, demo data) that anyone can open in a browser without Studio or sign-in, so a
+   build can be shared before code review. Web fonts load from Google Fonts. **Library** shows the live tokens, components (with demos) and
    template registry.
 6. When a case needs a Figma update, its page shows the exact `/fdi-figma DCF-NNNN` command for the
    Product Designer to run in Claude Code; the case then comes back to Studio for design review.

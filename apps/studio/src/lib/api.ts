@@ -45,6 +45,24 @@ export const api = {
   cancelRun: (runId: string) => request<{ ok: boolean }>(`/api/runs/${runId}/cancel`, { method: "POST" }),
   library: () => request<LibraryPayload>("/api/library"),
   inputUrl: (id: string, name: string) => `/api/cases/${id}/inputs/${encodeURIComponent(name)}`,
+  /** Builds the page into one HTML file on the server and saves it in the browser (Gallery › Download). */
+  downloadPage: async (pageId: string): Promise<string> => {
+    const res = await fetch(`/api/pages/${encodeURIComponent(pageId)}/export`, { headers: headers() });
+    if (!res.ok) {
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      throw new ApiError(res.status, body.error ?? `Download failed (${res.status})`);
+    }
+    const name = /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") ?? "")?.[1] ?? `${pageId}.html`;
+    const url = URL.createObjectURL(await res.blob());
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return name;
+  },
 };
 
 /** Streams run events over SSE using fetch (keeps the Studio header on the request). */
