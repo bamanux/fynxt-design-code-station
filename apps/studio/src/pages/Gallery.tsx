@@ -1,6 +1,6 @@
 import { Alert, Badge, Button, Card, Modal, TextArea } from "@fynxt/ui";
-import { ExternalLink, MessageSquarePlus, MousePointerClick, X } from "lucide-react";
-import { lazy, Suspense, useMemo, useRef, useState, type MouseEvent } from "react";
+import { Download, ExternalLink, MessageSquarePlus, MousePointerClick, X } from "lucide-react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import type { GalleryEntry, PagePin } from "../../shared/types";
 import { pages } from "../../gallery/registry";
 import { EmptyState, PageHeader } from "../components/PageHeader";
@@ -28,6 +28,18 @@ export function GalleryPage({ pageId }: { pageId: string | null }) {
   const entries = lib.data?.galleryEntries ?? [];
   const entry = entries.find((e) => e.id === pageId) ?? null;
   const [requesting, setRequesting] = useState(false);
+  const [download, setDownload] = useState<{ busy: boolean; error: string | null; saved: string | null }>({ busy: false, error: null, saved: null });
+
+  useEffect(() => setDownload({ busy: false, error: null, saved: null }), [pageId]);
+
+  async function downloadPage(id: string) {
+    setDownload({ busy: true, error: null, saved: null });
+    try {
+      setDownload({ busy: false, error: null, saved: await api.downloadPage(id) });
+    } catch (err) {
+      setDownload({ busy: false, error: err instanceof Error ? err.message : String(err), saved: null });
+    }
+  }
   const Page = useMemo(() => {
     const loader = pageId ? pages[pageId] : undefined;
     return loader ? lazy(loader) : null;
@@ -83,12 +95,21 @@ export function GalleryPage({ pageId }: { pageId: string | null }) {
                   <a className="gallery__open" href={`/preview.html?page=${encodeURIComponent(entry.id)}`} target="_blank" rel="noreferrer">
                     Open full page <ExternalLink aria-hidden="true" />
                   </a>
+                  <Button variant="secondary" leadingIcon={<Download />} loading={download.busy} onClick={() => void downloadPage(entry.id)}>
+                    Download
+                  </Button>
                   <Button leadingIcon={<MessageSquarePlus />} onClick={() => setRequesting(true)}>
                     Request a change
                   </Button>
                 </div>
                 </div>
               </Card>
+            )}
+            {entry && download.error && <Alert status="error" title="Couldn't build the download">{download.error}</Alert>}
+            {entry && download.saved && (
+              <Alert status="success" title="Page downloaded">
+                {download.saved} is one HTML file with everything inline. Send it to anyone: it opens in any browser, with demo data and no sign-in. It is a snapshot of the page now, not production code.
+              </Alert>
             )}
             {entry && Page ? (
               <PinnedPage entry={entry}>
