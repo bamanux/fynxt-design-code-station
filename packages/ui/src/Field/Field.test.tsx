@@ -108,4 +108,10 @@ describe("DateField (DCF-0003)", () => {
     render(<DateField label="Value" disabled />);
     expect(screen.getByLabelText("Value")).toBeDisabled();
   });
+  it("groups Select options under optgroup headings (DCF-0002)", () => {
+    render(<Select label="Field" options={[{ value: "a", label: "Country", group: "Fields" }, { value: "b", label: "Country category", group: "Categories & bands" }, { value: "c", label: "Contact band", group: "Categories & bands" }]} value="a" onChange={() => {}} />);
+    const groups = screen.getByRole("combobox", { name: "Field" }).querySelectorAll("optgroup");
+    expect([...groups].map((g) => g.label)).toEqual(["Fields", "Categories & bands"]);
+    expect(groups[1]!.querySelectorAll("option")).toHaveLength(2);
+  });
 });

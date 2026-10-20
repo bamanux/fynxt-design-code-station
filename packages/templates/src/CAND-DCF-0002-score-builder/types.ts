@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type { BadgeStatus, ConditionFieldType, ConditionLimits, ConditionObject, ConditionOperator, ConditionValue, SideNavItem, SideNavSettings, SideNavUser } from "@fynxt/ui";
 
 /**
- * Score Builder: DRAFT candidate template from DCF-0002 (approved Figma version 2410527021694858974,
+ * Score Builder: DRAFT candidate template from DCF-0002 (approved Figma version 2412391106275681573, rev 6;
  * prototype v5). A list of score models (in the app shell, Settings › Brand Setup › Score Builder) that
  * opens a full-screen builder without the shell (D17, Q45): logic outline · editor · minimal summary.
  *
@@ -58,7 +58,8 @@ export interface Band {
   inclusive?: boolean;
 }
 
-export type OverrideOutcomeType = "forceBand" | "atLeastBand" | "setScore" | "reject" | "refer";
+/** `raise` = "Raise to that score" (rev 6, BR8 / BR9): only raises, uses the matched score. */
+export type OverrideOutcomeType = "forceBand" | "atLeastBand" | "setScore" | "raise" | "reject" | "refer";
 
 /** Override rule (R17–R19, R27–R28). Scoped to an object, or to one attribute of it. */
 export interface OverrideRule {
@@ -168,6 +169,13 @@ export interface ScoreBuilderConfig {
   /** Operators per field type, for Applies to and override conditions (Q5). */
   operatorsByType: Record<ConditionFieldType, ConditionOperator[]>;
   limits?: ConditionLimits;
+  /**
+   * Operators for an attribute's **category** in override conditions (rev 6, D35), e.g. is / is any of.
+   * Ids must use a `single` or `multi` value shape.
+   */
+  categoryOperators: ConditionOperator[];
+  /** Operators for an object's **band** in override conditions (rev 6), e.g. "reaches" (that band or higher). */
+  bandOperators: ConditionOperator[];
   /** Override outcomes offered (R19, R27). Labels are product copy. */
   outcomeTypes: { value: OverrideOutcomeType; label: string }[];
   /** Band description limit in words (Q63: 250). */

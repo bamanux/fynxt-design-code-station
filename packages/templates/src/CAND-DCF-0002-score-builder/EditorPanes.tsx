@@ -1,9 +1,9 @@
 import { Alert, Badge, Button, IconButton, MultiSelect, NumberField, SegmentedControl, Select, Spinner, TextArea, TextField, Tooltip, type ConditionObject } from "@fynxt/ui";
 import { Copy, GripVertical, Info, Plus, Trash2, X, Zap } from "lucide-react";
-import { useId, useState, type DragEvent, type KeyboardEvent } from "react";
+import { Fragment, useId, useState, type DragEvent, type KeyboardEvent } from "react";
 import { AttributePicker } from "./AttributePicker";
 import { AddConditionMenu, ConditionRows } from "./ConditionRows";
-import { attributeLabel, bandProblem, conditionsText, fieldOf, objectLabel, toNumber, wordCount } from "./model";
+import { attributeLabel, bandProblem, conditionSchema, conditionsText, fieldOf, objectLabel, overrideHint, toNumber, wordCount } from "./model";
 import type { Band, Logic, OverrideRule, ScoreAttribute, ScoreBuilderConfig, ScoreModelInput, ScoreObjectGroup, ValueRow } from "./types";
 
 export const LOGIC_OPTIONS: { value: Logic; label: string }[] = [
@@ -158,14 +158,14 @@ export function OverrideRules({
   const bands = input.bands.filter((b) => b.label.trim());
   const set = (id: string, patch: Partial<OverrideRule>) => update({ overrides: input.overrides.map((o) => (o.id === id ? { ...o, ...patch } : o)) });
   const group = input.objects.find((g) => g.id === objectId);
-  const attribute = group?.attributes.find((a) => a.id === attributeId);
+  // Conditions can test fields, an attribute's category or an object's band (rev 6, D33 / D35).
+  const cschema = conditionSchema(schema, input, config);
+  // Raise to that score is offered in Weighted mode only until Q77 is answered.
+  const outcomes = config.outcomeTypes.filter((t) => t.value !== "raise" || input.method !== "points");
 
   function addRule() {
-    // Start from this object (and attribute's field) so the rule reads "If Contact Country …" (frame 17).
-    const object = group?.object ?? "";
-    const field = attribute ? fieldOf(schema, object, attribute.field) : undefined;
-    const condition = field ? (config.operatorsByType[field.type]?.[0]?.id ?? "") : "";
-    const rule = { kind: "rule" as const, id: newId(), object, field: field?.id ?? "", fieldLabel: field?.label, condition, value: null };
+    // A new rule starts with this object; the admin picks the field (V6-01).
+    const rule = { kind: "rule" as const, id: newId(), object: group?.object ?? "", field: "", condition: "", value: null };
     update({ overrides: [...input.overrides, { id: newId(), objectId, attributeId, conditions: { match: "all", items: [rule] }, outcome: { type: "", value: "" } }] });
   }
 
@@ -182,17 +182,20 @@ export function OverrideRules({
         mine.map((o) => {
           const n = input.overrides.indexOf(o) + 1;
           const needsBand = o.outcome.type === "forceBand" || o.outcome.type === "atLeastBand";
-          const missing = showErrors && (!o.outcome.type || ((needsBand || o.outcome.type === "setScore") && !o.outcome.value));
+          const bandGone = needsBand && !!o.outcome.value && !bands.some((b) => b.id === o.outcome.value);
+          const missing = (showErrors && (!o.outcome.type || ((needsBand || o.outcome.type === "setScore") && !o.outcome.value))) || bandGone;
+          const hint = overrideHint(o, input, schema);
           return (
-            <div key={o.id} className="fx-sb-rule" aria-label={`Override rule ${n}`} role="group">
-              <ConditionRows label={`Override rule ${n}`} schema={schema} operatorsByType={config.operatorsByType} value={o.conditions} onChange={(conditions) => set(o.id, { conditions })} withObject lead="If" removable={o.conditions.items.length > 1} showErrors={showErrors} />
-              <div className="fx-sb-rule__then">
+            <Fragment key={o.id}>
+            <div className="fx-sb-rule" aria-label={`Override rule ${n}`} role="group">
+              <ConditionRows label={`Override rule ${n}`} schema={cschema} operatorsByType={config.operatorsByType} value={o.conditions} onChange={(conditions) => set(o.id, { conditions })} withObject lead="If" removable={o.conditions.items.length > 1} showErrors={showErrors} />
+              <div className="fx-sb-rule__then" data-outcome={o.outcome.type || undefined}>
                 <span className="fx-sb-rule__word">Then</span>
                 <Select
                   label={`Outcome of rule ${n}`}
                   hideLabel
                   placeholder="Choose outcome"
-                  options={config.outcomeTypes}
+                  options={outcomes}
                   value={o.outcome.type}
                   onChange={(e) => set(o.id, { outcome: { type: e.target.value as OverrideRule["outcome"]["type"], value: "" } })}
                   status={showErrors && !o.outcome.type ? "error" : undefined}
@@ -204,7 +207,7 @@ export function OverrideRules({
                     hideLabel
                     placeholder="Choose band"
                     options={bands.map((b) => ({ value: b.id, label: b.label }))}
-                    value={o.outcome.value}
+                    value={bandGone ? "" : o.outcome.value}
                     onChange={(e) => set(o.id, { outcome: { ...o.outcome, value: e.target.value } })}
                     status={missing && o.outcome.type ? "error" : undefined}
                   />
@@ -213,9 +216,15 @@ export function OverrideRules({
                   <NumberField label={`Score for rule ${n}`} hideLabel value={o.outcome.value} onChange={(e) => set(o.id, { outcome: { ...o.outcome, value: e.target.value } })} status={missing ? "error" : undefined} />
                 )}
                 <span className="fx-sb-grow" />
-                <IconButton variant="ghost" size="sm" label={`Remove override rule ${n}`} icon={<Trash2 />} onClick={() => update({ overrides: input.overrides.filter((x) => x.id !== o.id) })} />
+                <IconButton variant="ghost" size="xs" label={`Remove override rule ${n}`} icon={<Trash2 />} onClick={() => update({ overrides: input.overrides.filter((x) => x.id !== o.id) })} />
               </div>
             </div>
+            {hint && (
+              <div className="fx-sb-hint" aria-live="polite">
+                <Badge status={hint.status}>{hint.text}</Badge>
+              </div>
+            )}
+            </Fragment>
           );
         })}
       <div>
@@ -261,7 +270,7 @@ export function ObjectPane(props: PaneBase & { group: ScoreObjectGroup; showErro
           {...props}
           objectId={group.id}
           title={`${name} override rules`}
-          description={`When a rule matches, it replaces the ${name} result: force a band or set a score.${config.copy.objectOverrideExample ? ` ${config.copy.objectOverrideExample}` : ""}`}
+          description={`When a rule matches, it replaces or raises the ${name} result. Test a field, ${name}'s score or ${name}'s band${config.copy.objectOverrideExample ? `, e.g. ${config.copy.objectOverrideExample}` : ""}.`}
         />
       )}
     </>
@@ -430,7 +439,7 @@ export function AttributePane(
           </div>
         )}
       </section>
-      <OverrideRules {...props} objectId={group.id} attributeId={a.id} title={`${label} override rules`} description="When a rule matches, it replaces the result: force a band or set a score." />
+      <OverrideRules {...props} objectId={group.id} attributeId={a.id} title={`${label} override rules`} description="When a rule matches, it replaces or raises the result: force a band, set a score, or raise to the matched score." />
     </>
   );
 }
@@ -531,9 +540,11 @@ export function BandsPane({ config, input, update, showErrors }: Pick<PaneBase, 
 export function OverridesPane({ config, schema, input, update, onOpen }: Pick<PaneBase, "config" | "schema" | "input" | "update"> & { onOpen: (o: OverrideRule) => void }) {
   const [dragging, setDragging] = useState<number | null>(null);
   const [announce, setAnnounce] = useState("");
+  // Raise rules are checked first (Q78), so they are listed first; the rest keep their order (V6-07).
+  const ordered = [...input.overrides.filter((o) => o.outcome.type === "raise"), ...input.overrides.filter((o) => o.outcome.type !== "raise")];
   const move = (from: number, to: number) => {
-    if (to < 0 || to >= input.overrides.length || from === to) return;
-    const next = [...input.overrides];
+    if (to < 0 || to >= ordered.length || from === to) return;
+    const next = [...ordered];
     const [x] = next.splice(from, 1);
     next.splice(to, 0, x!);
     update({ overrides: next });
@@ -569,10 +580,10 @@ export function OverridesPane({ config, schema, input, update, onOpen }: Pick<Pa
           </h2>
           <Badge status={input.overrides.length ? "warning" : "neutral"}>{`${input.overrides.length} ${input.overrides.length === 1 ? "rule" : "rules"}`}</Badge>
         </div>
-        <p className="fx-sb-sub">Rules are checked in this order; drag to reorder. Which rule wins when several match is still to be confirmed.</p>
+        <p className="fx-sb-sub">Raise rules are checked first, then the others in this order; drag to reorder. Which rule wins when several match is still to be confirmed.</p>
         {input.overrides.length === 0 && <p className="fx-sb-sub">No override rules. Add them on an object or attribute.</p>}
         <ol className="fx-sb-ordered">
-          {input.overrides.map((o, i) => (
+          {ordered.map((o, i) => (
             <li
               key={o.id}
               className="fx-sb-ordered__item"
@@ -598,7 +609,7 @@ export function OverridesPane({ config, schema, input, update, onOpen }: Pick<Pa
               <span className="fx-sb-ordered__n">{i + 1}</span>
               <span className="fx-sb-stack fx-sb-grow">
                 <span className="fx-sb-ordered__text">
-                  If {conditionsText(o.conditions, schema, config.operatorsByType, "sentence", input.objects.find((g) => g.id === o.objectId)?.object) || "…"} → {outcome(o)}
+                  If {conditionsText(o.conditions, conditionSchema(schema, input, config), config.operatorsByType, "sentence", input.objects.find((g) => g.id === o.objectId)?.object) || "…"} → {outcome(o)}
                 </span>
                 <span className="fx-sb-sub">{scope(o)}</span>
               </span>

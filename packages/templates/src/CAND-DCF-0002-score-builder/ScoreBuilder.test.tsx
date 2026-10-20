@@ -33,9 +33,15 @@ function config(models: ScoreModel[] = [completeModel()], over: Partial<ScoreBui
       { value: "forceBand", label: "Force band" },
       { value: "atLeastBand", label: "At least band" },
       { value: "setScore", label: "Set score" },
+      { value: "raise", label: "Raise to that score" },
       { value: "reject", label: "Reject" },
       { value: "refer", label: "Refer to compliance" },
     ],
+    categoryOperators: [
+      { id: "is", label: "is", valueShape: "single" },
+      { id: "any_of", label: "is any of", valueShape: "multi" },
+    ],
+    bandOperators: [{ id: "reaches", label: "reaches", valueShape: "single" }],
     descriptionMaxWords: 250,
     weightTotal: 100,
     duplicateName: defaultDuplicateName,
@@ -238,15 +244,28 @@ describe("Score Builder editor (DCF-0002 P1)", () => {
     expect(screen.getByRole("menuitem", { name: "Give band 1 a label" })).toBeInTheDocument();
   });
 
-  it("starts an attribute override from that attribute and offers band outcomes (frames 16–18)", async () => {
+  it("builds an override on the attribute's category with Raise to that score (V6-01..03)", async () => {
     render(<ScoreEditor config={config()} modelId="m2001" onClose={() => {}} />);
     await screen.findByRole("heading", { name: "Country" });
     await userEvent.click(screen.getByRole("button", { name: "Add override" }));
     const rule = screen.getByRole("group", { name: "Override rule 1" });
     expect(within(rule).getByRole("combobox", { name: "Override rule 1, condition 1 object" })).toHaveValue("contact");
-    expect(within(rule).getByRole("combobox", { name: "Override rule 1, condition 1 field" })).toHaveValue("country");
-    await userEvent.selectOptions(within(rule).getByRole("combobox", { name: "Outcome of rule 1" }), "forceBand");
-    expect(within(rule).getByRole("combobox", { name: "Band for rule 1" })).toBeInTheDocument();
+    const field = within(rule).getByRole("combobox", { name: "Override rule 1, condition 1 field" });
+    expect([...field.querySelectorAll("optgroup")].map((g) => g.label)).toEqual(["Fields", "Categories & bands"]);
+    await userEvent.selectOptions(field, "category:country");
+    expect(within(rule).getByRole("combobox", { name: "Override rule 1, condition 1 operator" })).toHaveValue("is");
+    await userEvent.selectOptions(within(rule).getByRole("combobox", { name: "Override rule 1, condition 1 value" }), "Low");
+    await userEvent.selectOptions(within(rule).getByRole("combobox", { name: "Outcome of rule 1" }), "raise");
+    expect(within(rule).queryByRole("combobox", { name: "Band for rule 1" })).not.toBeInTheDocument();
+    expect(screen.getByText("Contact takes Country's score when it is higher · Low = India (10)")).toBeInTheDocument();
+  });
+
+  it("hides Raise to that score in Points mode (Q77)", async () => {
+    render(<ScoreEditor config={config([completeModel({ method: "points" })])} modelId="m2001" onClose={() => {}} />);
+    await screen.findByRole("heading", { name: "Country" });
+    await userEvent.click(screen.getByRole("button", { name: "Add override" }));
+    const outcome = within(screen.getByRole("group", { name: "Override rule 1" })).getByRole("combobox", { name: "Outcome of rule 1" });
+    expect([...outcome.querySelectorAll("option")].map((o) => o.textContent)).not.toContain("Raise to that score");
   });
 
   it("shows a not-found state for a missing model", async () => {

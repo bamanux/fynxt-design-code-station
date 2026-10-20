@@ -16,5 +16,5 @@ export const SCORE_BUILDER_CANDIDATE = {
   status: "DRAFT",
   version: "0.1.0",
   caseFile: "design-cases/DCF-0002-scoring-builder/case-file.md",
-  figmaVersion: "2410527021694858974",
+  figmaVersion: "2412391106275681573",
 } as const;

@@ -15,6 +15,7 @@ import {
 } from "@fynxt/ui";
 import { Plus, Trash2 } from "lucide-react";
 import type { ReactNode } from "react";
+import { operatorsOf, type ScoreConditionField } from "./model";
 
 /**
  * Flat condition rows as in the approved v5 frames: Applies to (frames 04–05: Field · Operator · Value)
@@ -61,8 +62,8 @@ export function ConditionRows({ label, schema, operatorsByType, value, onChange,
       {rules.map((r, i) => {
         const n = i + 1;
         const object = schema.find((o) => o.id === r.object);
-        const field = object?.fields.find((f) => f.id === r.field);
-        const ops = field ? (operatorsByType[field.type] ?? []) : [];
+        const field = object?.fields.find((f) => f.id === r.field) as ScoreConditionField | undefined;
+        const ops = operatorsOf(field, operatorsByType);
         const op = ops.find((o) => o.id === r.condition);
         const name = `${label}, condition ${n}`;
         const missing = (v: unknown) => (showErrors && !v ? "error" : undefined);
@@ -71,7 +72,9 @@ export function ConditionRows({ label, schema, operatorsByType, value, onChange,
           if (field.type === "list" && op.valueShape === "multi") {
             valueControl = <MultiSelect label={`${name} values`} hideLabel maxChips={1} placeholder="Select values" options={field.options ?? []} value={Array.isArray(r.value) ? r.value : r.value ? [r.value] : []} onChange={(v) => setRule(r.id, { value: v })} status={showErrors && !(Array.isArray(r.value) && r.value.length) ? "error" : undefined} />;
           } else if (field.type === "list") {
-            valueControl = <Select label={`${name} value`} hideLabel placeholder="Value" options={field.options ?? []} value={typeof r.value === "string" ? r.value : ""} onChange={(e) => setRule(r.id, { value: e.target.value })} status={missing(r.value)} />;
+            const current = typeof r.value === "string" ? r.value : "";
+            const gone = current !== "" && !(field.options ?? []).some((o) => o.value === current);
+            valueControl = <Select label={`${name} value`} hideLabel placeholder={gone ? "Choose a band" : "Value"} options={field.options ?? []} value={gone ? "" : current} onChange={(e) => setRule(r.id, { value: e.target.value })} status={gone ? "error" : missing(r.value)} />;
           } else if (field.type === "number") {
             valueControl = <NumberField label={`${name} value`} hideLabel value={typeof r.value === "string" ? r.value : ""} onChange={(e) => setRule(r.id, { value: e.target.value })} status={missing(r.value)} />;
           } else if (field.type === "date") {
@@ -100,12 +103,12 @@ export function ConditionRows({ label, schema, operatorsByType, value, onChange,
               <Select
                 label={`${name} field`}
                 hideLabel
-                placeholder="Field"
-                options={(object?.fields ?? []).map((f) => ({ value: f.id, label: f.label }))}
+                placeholder="Choose field"
+                options={((object?.fields ?? []) as ScoreConditionField[]).map((f) => ({ value: f.id, label: f.label, group: f.group ? f.group : (object?.fields as ScoreConditionField[]).some((x) => x.group) ? "Fields" : undefined }))}
                 value={r.field}
                 onChange={(e) => {
-                  const f = object?.fields.find((x) => x.id === e.target.value);
-                  setRule(r.id, { field: e.target.value, fieldLabel: f?.label, condition: f ? (operatorsByType[f.type]?.[0]?.id ?? "") : "", value: null });
+                  const f = object?.fields.find((x) => x.id === e.target.value) as ScoreConditionField | undefined;
+                  setRule(r.id, { field: e.target.value, fieldLabel: f?.label, condition: operatorsOf(f, operatorsByType)[0]?.id ?? "", value: null });
                 }}
                 status={missing(r.field)}
                 disabled={!object}

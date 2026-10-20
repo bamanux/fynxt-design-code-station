@@ -26,7 +26,7 @@ const overridesUsing = (input: ScoreModelInput, group: ScoreObjectGroup) =>
 
 /**
  * P1 · Score Builder, full screen without the app shell (D17, Q45). Logic outline · editor · summary
- * (on demand, D31). Approved prototype v5, Figma version 2410527021694858974.
+ * (on demand, D31). Approved Figma version 2412391106275681573 (rev 6).
  */
 export function ScoreEditor({ config, modelId, onClose }: ScoreEditorProps) {
   const { adapter } = config;
@@ -440,7 +440,7 @@ export function ScoreEditor({ config, modelId, onClose }: ScoreEditorProps) {
               ))}
               {input.overrides.length > 0 && (
                 <span className="fx-sb-op">
-                  {input.overrides.length} override {input.overrides.length === 1 ? "rule" : "rules"} can replace the result
+                  {input.overrides.length} override {input.overrides.length === 1 ? "rule" : "rules"} can replace or raise the result
                 </span>
               )}
             </div>

@@ -2,7 +2,7 @@
  * DCF-0002 · Settings › Brand Setup › Score Builder: page configuration for the Score Builder
  * candidate template. Configuration only (station contract invariant 3). Case file:
  * fynxt-product-experience-engine/design-cases/DCF-0002-scoring-builder/case-file.md
- * Approved Figma: version 2410527021694858974 (prototype v5).
+ * Approved Figma: version 2412391106275681573 (rev 6: raise as an override, category / band conditions; v5 was 2410527021694858974).
  *
  * Every value marked "PROPOSED (Qn)" is an FDI proposal from the case file, NOT a confirmed product
  * decision. Change it here when the owner answers. The data adapter is the gallery's in-memory DEMO;
@@ -110,6 +110,14 @@ const models: ScoreModel[] = [
         attributeId: "a1",
         conditions: { match: "all", items: [{ kind: "rule", id: "or1", object: "contact", field: "country", condition: "any_of", value: ["pakistan"] }] },
         outcome: { type: "forceBand", value: "b3" },
+      },
+      // Rev 6 (V6-03 / V6-07): raise rule on the attribute's category, created second (V6-03); the Overrides list shows raise rules first (Q78).
+      {
+        id: "o0",
+        objectId: "g1",
+        attributeId: "a1",
+        conditions: { match: "all", items: [{ kind: "rule", id: "or0", object: "contact", field: "category:country", condition: "is", value: "High" }] },
+        outcome: { type: "raise", value: "" },
       },
       {
         id: "o2",
@@ -241,6 +249,12 @@ export const scoreBuilderConfig: ScoreBuilderConfig = {
       { id: "contains", label: "contains", valueShape: "single" },
     ],
   },
+  // Rev 6 (D35, approved frames V6-01..06): conditions on an attribute's category and an object's band.
+  categoryOperators: [
+    { id: "is", label: "is", valueShape: "single" },
+    { id: "any_of", label: "is any of", valueShape: "multi" },
+  ],
+  bandOperators: [{ id: "reaches", label: "reaches", valueShape: "single" }],
   // PROPOSED (Q25): limits.
   limits: { rules: 20, groups: 5, rulesPerGroup: 10 },
   // R19, R27 (I9, I10). Precedence between outcomes is Q52.
@@ -248,6 +262,8 @@ export const scoreBuilderConfig: ScoreBuilderConfig = {
     { value: "forceBand", label: "Force band" },
     { value: "atLeastBand", label: "At least band" },
     { value: "setScore", label: "Set score" },
+    // Rev 6 (D33, BR8 / BR9, Aman Bansal): raise only, uses the matched score.
+    { value: "raise", label: "Raise to that score" },
     { value: "reject", label: "Reject" },
     { value: "refer", label: "Refer to compliance" },
   ],
@@ -269,7 +285,7 @@ export const scoreBuilderConfig: ScoreBuilderConfig = {
     columns: { label: "Choose columns", pendingReason: "Column settings TBD (Q70)" },
     descriptionHelp: "Provide details about this score model. (Q18)",
     descriptionInfo: "Description help TBD (Q18)",
-    objectOverrideExample: "Example: if the related Deal is not approved, force High Risk.",
+    objectOverrideExample: "if Deal reaches High Risk, the overall is at least High Risk",
     banner: { title: "Score models rate records automatically", text: "Banner copy TBD (Q20)." },
     breadcrumb: ["Settings", "Brand Setup", "Score Builder"],
     howItWorks: "Add objects and their attributes, score each value, weight each attribute, then set outcome bands. Override rules can force a result.",

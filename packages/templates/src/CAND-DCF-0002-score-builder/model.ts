@@ -1,5 +1,5 @@
 import { allRules, isRuleComplete, type ConditionFieldType, type ConditionObject, type ConditionOperator, type ConditionRule, type ConditionValue } from "@fynxt/ui";
-import type { Band, ScoreAttribute, ScoreModelInput, ScoreObjectGroup } from "./types";
+import type { Band, OverrideRule, ScoreAttribute, ScoreBuilderConfig, ScoreModelInput, ScoreObjectGroup } from "./types";
 
 /**
  * UI-side helpers for the builder. They check that the form is complete and do display arithmetic
@@ -79,7 +79,7 @@ export function collectIssues(
   input: ScoreModelInput,
   schema: ConditionObject[],
   operatorsByType: Record<ConditionFieldType, ConditionOperator[]>,
-  opts: { weightTotal: number; descriptionMaxWords: number }
+  opts: { weightTotal: number; descriptionMaxWords: number } & Partial<Pick<ScoreBuilderConfig, "categories" | "categoryOperators" | "bandOperators">>
 ): Issue[] {
   const issues: Issue[] = [];
   const add = (id: string, message: string, target: Issue["target"]) => issues.push({ id, message, target });
@@ -112,10 +112,13 @@ export function collectIssues(
     if (wordCount(b.description) > opts.descriptionMaxWords) add(`band-desc-${b.id}`, `“${b.label || `Band ${i + 1}`}” description is over ${opts.descriptionMaxWords} words`, { kind: "bands" });
   });
 
+  const cschema = opts.categories ? conditionSchema(schema, input, opts as Pick<ScoreBuilderConfig, "categories" | "categoryOperators" | "bandOperators">) : schema;
   input.overrides.forEach((o, i) => {
     const rules = allRules(o.conditions);
-    const outcomeNeedsValue = o.outcome.type === "forceBand" || o.outcome.type === "atLeastBand" || o.outcome.type === "setScore";
-    const incomplete = !rules.length || rules.some((r) => !isRuleComplete(r, schema, operatorsByType)) || !o.outcome.type || (outcomeNeedsValue && !o.outcome.value.trim());
+    const needsBand = o.outcome.type === "forceBand" || o.outcome.type === "atLeastBand";
+    const outcomeNeedsValue = needsBand || o.outcome.type === "setScore";
+    const bandGone = needsBand && !!o.outcome.value && !input.bands.some((b) => b.id === o.outcome.value);
+    const incomplete = !rules.length || rules.some((r) => !isConditionComplete(r, cschema, operatorsByType)) || !o.outcome.type || (outcomeNeedsValue && !o.outcome.value.trim()) || bandGone;
     if (incomplete) {
       const target = o.attributeId ? ({ kind: "attribute", objectId: o.objectId, attributeId: o.attributeId } as const) : ({ kind: "object", objectId: o.objectId } as const);
       add(`override-${o.id}`, `Complete or remove override rule ${i + 1}`, target);
@@ -147,7 +150,7 @@ function ruleValueText(rule: ConditionRule, schema: ConditionObject[]): string {
 export function ruleText(rule: ConditionRule, schema: ConditionObject[], operatorsByType: Record<ConditionFieldType, ConditionOperator[]>, style: "compact" | "sentence"): string {
   const field = fieldOf(schema, rule.object, rule.field);
   const name = field?.label ?? rule.fieldLabel ?? rule.field;
-  const op = field ? operatorsByType[field.type]?.find((o) => o.id === rule.condition) : undefined;
+  const op = operatorsOf(field as ScoreConditionField | undefined, operatorsByType).find((o) => o.id === rule.condition);
   const opText = style === "compact" && rule.condition === "is" ? "=" : (op?.label ?? rule.condition);
   return [name, opText, ruleValueText(rule, schema)].filter(Boolean).join(" ");
 }
@@ -182,4 +185,96 @@ export function issueArea(target: Selection, schema: ConditionObject[], input: S
     if (a) return attributeLabel(schema, g.object, a);
   }
   return objectLabel(schema, g.object);
+}
+
+/* ---------------------------------------------------------------- Override conditions (rev 6, D33 / D35) */
+
+/** Field id of an attribute's category in a condition: `category:<attribute field id>`. */
+export const CATEGORY_FIELD = (fieldId: string) => `category:${fieldId}`;
+/** Field id of an object's band in a condition. */
+export const BAND_FIELD = "band";
+export const SCORES_GROUP = "Categories & bands";
+
+/** A condition field that may carry its own operators and a menu group (virtual category / band fields). */
+export type ScoreConditionField = ConditionObject["fields"][number] & { group?: string; operators?: ConditionOperator[] };
+
+/**
+ * The schema override conditions pick from: each object's CRM fields, plus for every object in the model
+ * its attributes' categories ("Country category") and its band ("Contact band"). No score numbers (D35).
+ */
+export function conditionSchema(schema: ConditionObject[], input: ScoreModelInput, config: Pick<ScoreBuilderConfig, "categories" | "categoryOperators" | "bandOperators">): ConditionObject[] {
+  return schema.map((o) => {
+    const groups = input.objects.filter((g) => g.object === o.id);
+    if (!groups.length) return o;
+    const attrs = [...new Map(groups.flatMap((g) => g.attributes).map((a) => [a.field, a])).values()];
+    const extra: ScoreConditionField[] = [
+      ...attrs.map((a) => ({
+        id: CATEGORY_FIELD(a.field),
+        label: `${o.fields.find((f) => f.id === a.field)?.label ?? a.field} category`,
+        type: "list" as const,
+        options: config.categories.map((c) => ({ value: c, label: c })),
+        operators: config.categoryOperators,
+        group: SCORES_GROUP,
+      })),
+      { id: BAND_FIELD, label: `${o.label} band`, type: "list" as const, options: input.bands.map((b, i) => ({ value: b.id, label: b.label || `Band ${i + 1}` })), operators: config.bandOperators, group: SCORES_GROUP },
+    ];
+    return { ...o, fields: [...o.fields, ...extra] };
+  });
+}
+
+export const operatorsOf = (field: ScoreConditionField | undefined, operatorsByType: Record<ConditionFieldType, ConditionOperator[]>) => (field ? (field.operators ?? operatorsByType[field.type] ?? []) : []);
+
+/** A condition row is complete when its field, operator and value exist; list values must still be options (a deleted band fails). */
+export function isConditionComplete(rule: ConditionRule, schema: ConditionObject[], operatorsByType: Record<ConditionFieldType, ConditionOperator[]>): boolean {
+  const field = fieldOf(schema, rule.object, rule.field) as ScoreConditionField | undefined;
+  const op = operatorsOf(field, operatorsByType).find((o) => o.id === rule.condition);
+  if (!field || !op) return false;
+  if (op.valueShape === "none") return true;
+  const values = Array.isArray(rule.value) ? rule.value : rule.value ? [rule.value] : [];
+  if (!values.length) return false;
+  return field.type !== "list" || !field.options || values.every((v) => field.options!.some((o) => o.value === v));
+}
+
+export type RuleHint = { status: "success" | "warning" | "error" | "info"; text: string };
+
+/**
+ * Live hint under an override rule (client-side, from what is entered; never scores a record):
+ * category condition → which values are in that category; band condition → what the outcome does;
+ * a band that no longer exists → error.
+ */
+export function overrideHint(o: OverrideRule, input: ScoreModelInput, schema: ConditionObject[]): RuleHint | null {
+  const rules = allRules(o.conditions);
+  const r = rules[0];
+  if (!r) return null;
+  const owner = input.objects.find((g) => g.id === o.objectId);
+  const ownerName = owner ? objectLabel(schema, owner.object) : "";
+  const bandOf = (id: string) => input.bands.find((b) => b.id === id);
+  const values = Array.isArray(r.value) ? r.value : r.value ? [r.value] : [];
+  if (r.field === BAND_FIELD) {
+    const band = values.length ? bandOf(values[0]!) : undefined;
+    if (values.length && !band) return { status: "error", text: "The band used here was deleted. Choose a band" };
+    if (!band) return null;
+    const who = objectLabel(schema, r.object);
+    if (o.outcome.type === "raise") return { status: "info", text: `When ${who} reaches ${band.label}, the overall takes ${who}'s score if it is higher` };
+    if (o.outcome.type === "atLeastBand" && bandOf(o.outcome.value)) return { status: "info", text: `The overall result is at least ${bandOf(o.outcome.value)!.label} whenever ${who} reaches ${band.label}` };
+    return null;
+  }
+  if (r.field.startsWith("category:") && values.length) {
+    const fieldId = r.field.slice("category:".length);
+    const group = input.objects.find((g) => g.object === r.object && g.attributes.some((a) => a.field === fieldId));
+    const a = group?.attributes.find((x) => x.field === fieldId);
+    if (!a || !group) return null;
+    const field = fieldOf(schema, group.object, fieldId);
+    const attr = field?.label ?? fieldId;
+    const rows = a.values.filter((v) => values.includes(v.category));
+    const cats = values.join(" or ");
+    if (!rows.length) return { status: "warning", text: `No ${attr} value is in ${cats} yet, so this rule never triggers` };
+    const labels = rows.flatMap((v) => (field?.type === "number" ? [`${v.from || 0}–${v.to || "and above"}`] : v.values.map((x) => field?.options?.find((op) => op.value === x)?.label ?? x)));
+    const scores = rows.map((v) => toNumber(v.score)).filter((n): n is number => n !== null);
+    const lo = Math.min(...scores), hi = Math.max(...scores);
+    const range = scores.length ? ` (${lo === hi ? lo : `${lo}–${hi}`})` : "";
+    const list = `${cats} = ${labels.join(", ")}${range}`;
+    return { status: "success", text: o.outcome.type === "raise" ? `${ownerName || objectLabel(schema, r.object)} takes ${attr}'s score when it is higher · ${list}` : list };
+  }
+  return null;
 }

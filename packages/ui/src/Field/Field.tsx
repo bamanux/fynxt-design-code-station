@@ -115,6 +115,19 @@ export interface SelectOption {
   value: string;
   label: string;
   disabled?: boolean;
+  /** Optional group heading; consecutive options with the same group render in one `<optgroup>` (DCF-0002). */
+  group?: string;
+}
+
+/** Consecutive options grouped by `group` (ungrouped options stay at their position). */
+function groupOptions(options: SelectOption[]): { group?: string; items: SelectOption[] }[] {
+  const out: { group?: string; items: SelectOption[] }[] = [];
+  for (const o of options) {
+    const last = out[out.length - 1];
+    if (last && last.group === o.group) last.items.push(o);
+    else out.push({ group: o.group, items: [o] });
+  }
+  return out;
 }
 
 export type SelectProps = FieldChromeProps &
@@ -150,11 +163,20 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
               {placeholder}
             </option>
           )}
-          {options.map((o) => (
-            <option key={o.value} value={o.value} disabled={o.disabled}>
-              {o.label}
-            </option>
-          ))}
+          {groupOptions(options).map((g, i) => {
+            const items = g.items.map((o) => (
+              <option key={o.value} value={o.value} disabled={o.disabled}>
+                {o.label}
+              </option>
+            ));
+            return g.group ? (
+              <optgroup key={`${g.group}-${i}`} label={g.group}>
+                {items}
+              </optgroup>
+            ) : (
+              items
+            );
+          })}
         </select>
         <ChevronDown className="fx-field__chevron" aria-hidden="true" />
       </span>
