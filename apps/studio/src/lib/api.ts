@@ -1,4 +1,4 @@
-import type { CaseDetail, CaseStatus, CaseSummary, LibraryPayload, PagePin, RunEvent, RunSummary, StationUser, StudioMeta, StudioUser } from "../../shared/types";
+import type { CodeFiles, CaseDetail, CaseStatus, CaseSummary, LibraryPayload, PagePin, RunEvent, RunSummary, StationUser, StudioMeta, StudioUser } from "../../shared/types";
 
 export class ApiError extends Error {
   constructor(
@@ -44,6 +44,7 @@ export const api = {
   run: (id: string) => request<RunSummary>(`/api/cases/${id}/runs`, { method: "POST" }),
   cancelRun: (runId: string) => request<{ ok: boolean }>(`/api/runs/${runId}/cancel`, { method: "POST" }),
   library: () => request<LibraryPayload>("/api/library"),
+  code: (q: { page: string } | { component: string } | { case: string }) => request<CodeFiles>(`/api/code?${new URLSearchParams(q as Record<string, string>).toString()}`),
   inputUrl: (id: string, name: string) => `/api/cases/${id}/inputs/${encodeURIComponent(name)}`,
   /** Builds the page into one HTML file on the server and saves it in the browser (Gallery › Download). */
   downloadPage: async (pageId: string): Promise<string> => {

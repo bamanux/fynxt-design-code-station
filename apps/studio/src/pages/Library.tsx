@@ -3,6 +3,7 @@ import { CheckCircle2, ExternalLink, XCircle } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import type { LibraryPayload, TokenEntry } from "../../shared/types";
 import { EmptyState, PageHeader } from "../components/PageHeader";
+import { ViewCode } from "../components/ViewCode";
 import { api } from "../lib/api";
 import { navigate } from "../lib/router";
 import { useAsync } from "../lib/useAsync";
@@ -108,7 +109,10 @@ function ComponentsView({ library }: { library: LibraryPayload }) {
                 <Flag ok={c.hasCodeConnect} label="Code Connect" />
               </span>
             </div>
-            <code className="muted">@fynxt/ui · {c.path}</code>
+            <div className="row-between">
+              <code className="muted">@fynxt/ui · {c.path}</code>
+              <ViewCode query={{ component: c.name }} size="s" />
+            </div>
             {DEMOS[c.name] && <div className="demo">{DEMOS[c.name]}</div>}
             {c.figmaUrls.length > 0 && (
               <ul className="link-list">

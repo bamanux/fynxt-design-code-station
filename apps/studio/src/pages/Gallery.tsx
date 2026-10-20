@@ -6,6 +6,7 @@ import { pages } from "../../gallery/registry";
 import { EmptyState, PageHeader } from "../components/PageHeader";
 import { RequestForm } from "../components/RequestForm";
 import { StatusBadge } from "../components/StatusBadge";
+import { ViewCode } from "../components/ViewCode";
 import { api } from "../lib/api";
 import { Link, navigate } from "../lib/router";
 import { useSession } from "../lib/session";
@@ -98,6 +99,7 @@ export function GalleryPage({ pageId }: { pageId: string | null }) {
                   <Button variant="secondary" leadingIcon={<Download />} loading={download.busy} onClick={() => void downloadPage(entry.id)}>
                     Download
                   </Button>
+                  <ViewCode query={{ page: entry.id }} />
                   <Button leadingIcon={<MessageSquarePlus />} onClick={() => setRequesting(true)}>
                     Request a change
                   </Button>
