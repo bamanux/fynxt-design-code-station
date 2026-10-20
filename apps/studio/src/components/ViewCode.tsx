@@ -15,6 +15,8 @@ export const EDITORS = [
 ] as const;
 
 const EDITOR_KEY = "fdi.codeEditor";
+/** Short name in the list (the group already says where): "Badge/Badge.tsx" for components, else the file name. */
+const shortName = (path: string, group: string) => path.split("/").slice(group.startsWith("Components") ? -2 : -1).join("/");
 const ROOT_KEY = "fdi.stationRoot";
 
 /** `vscode://file/<root>/<path>`; spaces and other characters are encoded, slashes kept. */
@@ -82,14 +84,15 @@ export function ViewCode({ query, label = "View code", size = "m" }: { query: Qu
           {groups.map((g) => (
             <section key={g} aria-label={g} className="stack-tight">
               <h3 className="code-group">{g}</h3>
+              {data!.folder && g.startsWith("Template") && <p className="muted">{data!.folder}</p>}
               <ul className="link-list">
                 {data!.files.filter((f) => f.group === g).map((f) => (
                   <li key={f.path}>
                     {f.missing ? (
-                      <span className="muted"><FileCode2 aria-hidden="true" className="inline-icon" /> {f.path} (not in this checkout)</span>
+                      <span className="muted" title={f.path}><FileCode2 aria-hidden="true" className="inline-icon" /> {shortName(f.path, g)} (not in this checkout)</span>
                     ) : (
-                      <a href={editorUrl(editor, base, f.path)}>
-                        <FileCode2 aria-hidden="true" /> {f.path}
+                      <a href={editorUrl(editor, base, f.path)} title={f.path} aria-label={`Open ${f.path}`}>
+                        <FileCode2 aria-hidden="true" /> {shortName(f.path, g)}
                       </a>
                     )}
                   </li>
