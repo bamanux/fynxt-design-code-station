@@ -249,3 +249,10 @@ svg { inline-size: var(--fx-spacing-4); block-size: var(--fx-spacing-4); flex: n
 .pin-popover { position: absolute; z-index: 32; inline-size: calc(var(--fx-spacing-12) * 8); margin-block-start: var(--fx-spacing-4); }
 .pin-form { box-shadow: var(--fx-shadow-lg); }
 .pin-list { display: flex; flex-direction: column; gap: var(--fx-spacing-2); margin: 0; padding-inline-start: var(--fx-spacing-5); }
+
+/* View code (Gallery, Library, Case page) */
+.code-settings { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: var(--fx-spacing-3); }
+.code-group { margin: 0; color: var(--fx-text-muted-foreground); font-family: var(--fx-typography-table-header-font-family); font-weight: var(--fx-typography-table-header-font-weight); font-size: var(--fx-typography-table-header-font-size); letter-spacing: var(--fx-typography-table-header-letter-spacing); text-transform: uppercase; }
+.code-folder { display: inline-flex; align-items: center; gap: var(--fx-spacing-1); }
+.code-folder > svg, .link-list a > svg { inline-size: var(--fx-spacing-4); block-size: var(--fx-spacing-4); flex: none; }
+.link-list a { word-break: break-all; }

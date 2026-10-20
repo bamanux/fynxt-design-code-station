@@ -4,6 +4,7 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import type { CaseAction, CaseDetail, DesignAsset, StationUser } from "../../shared/types";
 import { Markdown } from "../components/Markdown";
 import { EmptyState, PageHeader } from "../components/PageHeader";
+import { ViewCode } from "../components/ViewCode";
 import { RunLog } from "../components/RunLog";
 import { StageStepper } from "../components/StageStepper";
 import { StatusBadge } from "../components/StatusBadge";
@@ -293,7 +294,12 @@ export function CaseDetailPage({ id }: { id: string }) {
         eyebrow={`${detail.id}${detail.module ? ` · ${detail.module}` : ""}`}
         title={detail.title}
         description={`Requested by ${detail.requestedBy || "—"} · rev ${detail.revision || "—"} · updated ${formatDate(detail.updated)}`}
-        actions={<StatusBadge status={detail.status} />}
+        actions={
+          <span className="row-gap">
+            <ViewCode query={{ case: detail.id }} size="s" />
+            <StatusBadge status={detail.status} />
+          </span>
+        }
       />
       <StageStepper status={detail.status} />
       {detail.activeRun && (

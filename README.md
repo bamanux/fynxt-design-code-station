@@ -60,7 +60,11 @@ to run without it.
    linked to that page and its source case, and FDI takes it through the same steps. **Open full page**
    shows the page at full width. **Download** saves the page as one self-contained HTML file (all code,
    styles and icons inline, demo data) that anyone can open in a browser without Studio or sign-in, so a
-   build can be shared before code review. Web fonts load from Google Fonts. **Library** shows the live tokens, components (with demos) and
+   build can be shared before code review. Web fonts load from Google Fonts. **View code** (Gallery page,
+   each Library component, and each case page) lists the Station files behind it (page config, template,
+   the `@fynxt/ui` components it uses, or the files a case's commits changed) and opens each one in your
+   editor (VS Code, VS Code Insiders or Cursor) to view, edit or review it. Set "My Station folder" to your
+   own clone if Studio runs on another machine. **Library** shows the live tokens, components (with demos) and
    template registry.
 6. When a case needs a Figma update, its page shows the exact `/fdi-figma DCF-NNNN` command for the
    Product Designer to run in Claude Code; the case then comes back to Studio for design review.

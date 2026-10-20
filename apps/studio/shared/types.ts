@@ -251,3 +251,25 @@ export interface StudioMeta {
   maxBudgetUsd: number;
   permissionsNote: string;
 }
+
+/** "View code": Station files behind a page, component or case, opened in the person's editor. */
+export interface CodeFile {
+  /** Path from the Station root, e.g. "packages/ui/src/Select/Select.tsx". */
+  path: string;
+  /** Section heading in the list, e.g. "Page", "Template · CAND-…", "Components (@fynxt/ui)". */
+  group: string;
+  /** The file is not in the current checkout (case files on another branch). */
+  missing?: boolean;
+}
+
+export interface CodeFiles {
+  /** Station root on the Studio machine; people can override it with their own clone's path. */
+  root: string;
+  title: string;
+  /** Folder to open as a whole, when there is one (template or component folder). */
+  folder: string | null;
+  /** Case branch, for case code. */
+  branch?: string;
+  files: CodeFile[];
+  note?: string;
+}

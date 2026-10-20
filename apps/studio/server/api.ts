@@ -9,6 +9,7 @@ import { assertSameOriginWrite, currentUser, readForm, readJson, sendJson } from
 import { galleryEntries, library } from "./library";
 import { addMember, memberEmails, readMembers, removeMember, setOwner } from "./members";
 import { canComment, canRun, canSubmit, headlessBlocker, stageFor } from "./permissions";
+import { caseCode, componentCode, pageCode } from "./code";
 import { exportPage } from "./exportPage";
 import { addPin, listPins } from "./pins";
 import { agentProblem, cancelRun, startRun, subscribe } from "./runs";
@@ -111,6 +112,15 @@ async function route(req: IncomingMessage, res: ServerResponse, path: string, qu
   }
 
   if (parts[0] === "library" && method === "GET") return sendJson(res, 200, await library());
+
+  // ---------- View code: files behind a page, component or case, for opening in an editor
+  if (parts[0] === "code" && method === "GET") {
+    const page = query.get("page"), component = query.get("component"), caseId = query.get("case");
+    if (page) return sendJson(res, 200, await pageCode(page));
+    if (component) return sendJson(res, 200, await componentCode(component));
+    if (caseId) return sendJson(res, 200, await caseCode(caseId, user));
+    throw new HttpError(400, "Say which code: ?page=, ?component= or ?case=");
+  }
 
   // ---------- Download a gallery page as one self-contained HTML file (share before code review)
   if (parts[0] === "pages" && parts[1] && parts[2] === "export" && method === "GET") {
